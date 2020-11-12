@@ -10,6 +10,8 @@ use datetime_mod
 use duration_mod
 use iso_c_binding
 
+use fckit_configuration_module, only: fckit_configuration
+
 use fv3jedi_gfs_mod
 use fv3jedi_geom_mod, only: fv3jedi_geom
 use fv3jedi_geom_interface_mod, only: fv3jedi_geom_registry
@@ -37,22 +39,28 @@ contains
 
 ! ------------------------------------------------------------------------------
 
-subroutine c_fv3jedi_gfs_create(c_conf, c_key_geom, c_key_self) bind (c,name='fv3jedi_gfs_create_f90')
+subroutine c_fv3jedi_gfs_create(c_key_self, c_key_geom, c_mconf, c_gfsmconf) bind (c,name='fv3jedi_gfs_create_f90')
 
 implicit none
 integer(c_int), intent(inout) :: c_key_self  !< Key to model data
 integer(c_int), intent(in)    :: c_key_geom  !< Geometry
-type(c_ptr),    intent(in)    :: c_conf      !< pointer to object of class Config
+type(c_ptr),    intent(in)    :: c_mconf     !< pointer to object of class Config
+type(c_ptr),    intent(in)    :: c_gfsmconf  !< pointer to object of class Config
 
-type(gfs_model), pointer :: self
-type(fv3jedi_geom),  pointer :: geom
+type(gfs_model),    pointer :: self
+type(fv3jedi_geom), pointer :: geom
+type(fckit_configuration)   :: mconf
+type(fckit_configuration)   :: gfsmconf
 
 call fv3jedi_geom_registry%get(c_key_geom, geom)
 call fv3jedi_gfs_registry%init()
 call fv3jedi_gfs_registry%add(c_key_self)
 call fv3jedi_gfs_registry%get(c_key_self, self)
 
-call gfs_create(self, geom, c_conf)
+mconf    = fckit_configuration(c_mconf)
+gfsmconf = fckit_configuration(c_gfsmconf)
+
+call gfs_create(self, geom, mconf, gfsmconf)
 
 end subroutine c_fv3jedi_gfs_create
 
@@ -74,19 +82,23 @@ end subroutine c_fv3jedi_gfs_delete
 
 ! ------------------------------------------------------------------------------
 
-subroutine c_fv3jedi_gfs_initialize(c_key_self, c_key_state) bind(c,name='fv3jedi_gfs_initialize_f90')
+subroutine c_fv3jedi_gfs_initialize(c_key_self, c_key_state, c_dt) bind(c,name='fv3jedi_gfs_initialize_f90')
 
 implicit none
 integer(c_int), intent(in) :: c_key_self  !< Model
 integer(c_int), intent(in) :: c_key_state !< Model state
+type(c_ptr),    intent(in) :: c_dt        !< DateTime
 
 type(gfs_model), pointer :: self
 type(fv3jedi_state), pointer :: state
+type(datetime) :: fdate
 
 call fv3jedi_state_registry%get(c_key_state,state)
 call fv3jedi_gfs_registry%get(c_key_self, self)
 
-call gfs_initialize(self, state)
+call c_f_datetime(c_dt, fdate)
+
+call gfs_initialize(self, state, fdate)
 
 end subroutine c_fv3jedi_gfs_initialize
 
@@ -95,13 +107,12 @@ end subroutine c_fv3jedi_gfs_initialize
 subroutine c_fv3jedi_gfs_step(c_key_self, c_key_state, c_dt) bind(c,name='fv3jedi_gfs_step_f90')
 
 implicit none
-integer(c_int), intent(in)    :: c_key_self  !< Model
-integer(c_int), intent(in)    :: c_key_state !< Model state
-type(c_ptr),    intent(inout) :: c_dt        !< DateTime
+integer(c_int), intent(in) :: c_key_self  !< Model
+integer(c_int), intent(in) :: c_key_state !< Model state
+type(c_ptr),    intent(in) :: c_dt        !< DateTime
 
 type(gfs_model), pointer :: self
 type(fv3jedi_state), pointer :: state
-
 type(datetime) :: fdate
 
 call fv3jedi_gfs_registry%get(c_key_self, self)
@@ -115,19 +126,23 @@ end subroutine c_fv3jedi_gfs_step
 
 ! ------------------------------------------------------------------------------
 
-subroutine c_fv3jedi_gfs_finalize(c_key_self, c_key_state) bind(c,name='fv3jedi_gfs_finalize_f90')
+subroutine c_fv3jedi_gfs_finalize(c_key_self, c_key_state, c_dt) bind(c,name='fv3jedi_gfs_finalize_f90')
 
 implicit none
 integer(c_int), intent(in) :: c_key_self  !< Model
 integer(c_int), intent(in) :: c_key_state !< Model state
+type(c_ptr),    intent(in) :: c_dt        !< DateTime
 
 type(gfs_model), pointer :: self
 type(fv3jedi_state), pointer :: state
+type(datetime) :: fdate
 
 call fv3jedi_state_registry%get(c_key_state,state)
 call fv3jedi_gfs_registry%get(c_key_self, self)
 
-call gfs_finalize(self, state)
+call c_f_datetime(c_dt, fdate)
+
+call gfs_finalize(self, state, fdate)
 
 end subroutine c_fv3jedi_gfs_finalize
 

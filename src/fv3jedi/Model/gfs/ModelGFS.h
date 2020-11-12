@@ -50,6 +50,7 @@ class ModelGFS: public oops::ModelBase<Traits>,
 
 /// Model integration
   void step(State &, const ModelBias &) const;
+  int saveTrajectory(State &, const ModelBias &) const;
 
 /// Finish model integration
   void finalize(State &) const;
@@ -64,6 +65,8 @@ class ModelGFS: public oops::ModelBase<Traits>,
   util::Duration tstep_;
   const Geometry geom_;
   const oops::Variables vars_;
+  char jedidir_[10000];
+  char gfsdir_[10000];
 };
 // -----------------------------------------------------------------------------
 

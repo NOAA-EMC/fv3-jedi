@@ -24,21 +24,25 @@ namespace fv3jedi {
 
 extern "C" {
 
-  void fv3jedi_gfs_create_f90(const eckit::Configuration * const *,
-                               const F90geom &,
-                               F90model &);
+  void fv3jedi_gfs_create_f90(F90model &,
+                              const F90geom &,
+                              const eckit::Configuration * const *,
+                              const eckit::Configuration * const *);
+
   void fv3jedi_gfs_delete_f90(F90model &);
 
 
   void fv3jedi_gfs_initialize_f90(const F90model &,
-                                   const F90state &);
+                                  const F90state &,
+                                  util::DateTime * const *);
 
   void fv3jedi_gfs_step_f90(const F90model &,
-                             const F90state &,
-                             util::DateTime * const *);
+                            const F90state &,
+                            util::DateTime * const *);
 
   void fv3jedi_gfs_finalize_f90(const F90model &,
-                                 const F90inc &);
+                                const F90inc &,
+                                util::DateTime * const *);
 
 }  // extern "C"
 // -----------------------------------------------------------------------------

@@ -212,7 +212,7 @@ ecbuild_add_library( TARGET          fv3jedi
 
 if( FV3_FORECAST_MODEL MATCHES "UFS" ) 
   # ESMF
-  find_package(ESMF MODULE REQUIRED)
+  find_package(ESMF MODULE REQUIRED STATIC)
   
   # Link all the libraries
   target_link_libraries( fv3jedi PUBLIC nemsio::nemsio)

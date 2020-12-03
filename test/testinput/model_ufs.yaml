@@ -20,10 +20,10 @@ model:
 model aux control: null
 model aux error: null
 model test:
-  forecast length: PT2H
+  forecast length: PT1H
   final norm: 144.55226995514263 
   tolerance: 1.0e-4
-  testreforecast: false
+  test reforecast: false
 initial condition:
   filetype: gfs
   datapath: Data/ModelDirs/ufs/cime/INPUT

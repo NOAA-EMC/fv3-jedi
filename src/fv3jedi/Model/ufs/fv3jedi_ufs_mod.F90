@@ -73,6 +73,7 @@ type(fv3jedi_geom),        intent(in)    :: geom
 
 integer :: rc,urc,phase
 character(len=20) :: cdate_start, cdate_final
+type(esmf_time) :: date_start, date_final
 
 ! Initialize ESMF
 call esmf_initialize(vm=self%vm, logkindflag=esmf_LOGKIND_MULTI, defaultCalkind=esmf_CALKIND_GREGORIAN, &
@@ -115,15 +116,16 @@ esmf_err_abort(rc)
 ! Reset the clock based on what JEDI provides
 ! -------------------------------------------
 
+call get_start_date(self,date_start,date_final)
 ! Hard-coded settings for the protos
 self%dt=3600  ! 1h steps
-cdate_start = "2019-08-29T00:00:00Z"
-cdate_final = "2019-08-29T04:00:00Z" ! end date not critical, just be in future
+!cdate_start = "2017-01-01T00:00:00Z"
+!cdate_final = "2018-01-01T04:00:00Z" ! end date not critical, just be in future
 
 
 
 call esmf_logwrite("constructing clock", esmf_LOGMSG_INFO, rc=rc)
-call construct_clock(cdate_start, cdate_final, clock=self%clock)
+!call construct_clock(date_start, date_final, clock=self%clock)
 ! create import- and exportState to be used as conduits in/out NUOPC ESM
 call esmf_logwrite("creating states", esmf_LOGMSG_INFO, rc=rc)
 self%importState = ESMF_StateCreate(stateintent=ESMF_STATEINTENT_IMPORT, &
@@ -145,6 +147,7 @@ call NUOPC_Advertise(self%exportState, &
   TransferOfferGeomObject="cannot provide", rc=rc)
   esmf_err_abort(rc)
 
+#if 1
 ! Advertise fields on the importState, for data going into of ESM component
 call NUOPC_Advertise(self%importState, &
   StandardNames=(/"inst_down_lw_flx              ", &
@@ -152,7 +155,7 @@ call NUOPC_Advertise(self%importState, &
                   "inst_temp_height2m            "/), &
   TransferOfferGeomObject="cannot provide", rc=rc)
   esmf_err_abort(rc)
-
+#endif
 ! call ExternalAdvertise phase
 call esmf_logwrite("calling search phase map", esmf_LOGMSG_INFO, rc=rc)
 call NUOPC_CompSearchPhaseMap(self%esmComp, &
@@ -224,7 +227,7 @@ integer :: rc, rc_user                                               !<-- the ru
 !
 character(len=20) :: vdatec
 integer, save     :: tstep=1
-!character(len=80) :: fileName
+character(len=80) :: fileName
 
 !Convert datetimes
 call datetime_to_string(vdate, vdatec)
@@ -234,16 +237,16 @@ call esmf_logwrite("in initialize", esmf_LOGMSG_INFO, rc=rc)
 
 ! for testing, write out the fields in the exportState to file
 !TODO: only works for 2D surface fields
-!write(fileName, '("fields_in_esm_export_init",I2.2,".nc")') tstep
-!call FV3_StateWrite(self%exportState, fileName=trim(fileName), rc=rc)
-!esmf_err_abort(rc)
+write(fileName, '("fields_in_esm_export_init",I2.2,".nc")') tstep
+call FV3_StateWrite(self%exportState, fileName=trim(fileName), rc=rc)
+esmf_err_abort(rc)
 
 
 ! for testing, write out the fields in the importState to file
 !TODO: only works for 2D surface fields
-!write(fileName, '("fields_in_esm_import_init",I2.2,".nc")') tstep
-!call FV3_StateWrite(self%importState, fileName=trim(fileName), rc=rc)
-!esmf_err_abort(rc)
+write(fileName, '("fields_in_esm_import_init",I2.2,".nc")') tstep
+call FV3_StateWrite(self%importState, fileName=trim(fileName), rc=rc)
+esmf_err_abort(rc)
 
 
 tstep = tstep+1
@@ -265,7 +268,7 @@ type(datetime),      intent(in)    :: vdate_final
 integer                                :: rc
     
 ! local variables
-integer :: urc
+integer :: urc, itemCount
 character(len=20) :: vdatec1, vdatec2
 integer, save     :: tstep=1
 character(len=80) :: fileName
@@ -276,7 +279,7 @@ character(len=80) :: fileName
 self%mype = mpp_pe()
 rc = ESMF_SUCCESS
 !Convert JEDI state to model state
-!call state_to_nems( state, self )
+call state_to_nems( state, self )
 
 !Convert datetimes
 call datetime_to_string(vdate_start, vdatec1)
@@ -285,22 +288,17 @@ call datetime_to_string(vdate_final, vdatec2)
 call esmf_logwrite("starting step", esmf_LOGMSG_INFO, rc=rc)
 !Reset the GridComp clock for this advance step
 call construct_clock(vdatec1, vdatec2, clock=self%clock)
-!call ESMF_VMEpochEnter(epoch=ESMF_VMEPOCH_BUFFER, rc=rc)
-!esmf_err_abort(rc)
 ! timestamp the data going into the ESM or else NUOPC will flag incompatible
 call NUOPC_SetTimestamp(self%importState, self%clock, rc=rc)
 esmf_err_abort(rc)
 
 ! Step the ESM forward from vdate1 -> vdate2
 call ESMF_GridCompRun(self%esmComp, &
-  importState=self%importState, exportState=self%exportState, &
+  exportState=self%exportState, &
+! importState=self%importState, exportState=self%exportState, &
   clock=self%clock, userRc=urc, rc=rc)
 esmf_err_abort(rc)
 esmf_err_abort(urc)
-!call ESMF_VMCommWaitAll(self%vm, rc=rc)
-!esmf_err_abort(rc)
-!call ESMF_VMEpochExit(rc=rc)
-!esmf_err_abort(rc)
 
 #if 1
 ! for testing, write out the fields in the exportState to file
@@ -335,8 +333,8 @@ call esmf_logwrite(message_check,esmf_logmsg_info,rc=rc)
 !!! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
 !!!
 call esmf_gridcompfinalize(gridcomp   =self%esmComp&  !<-- the nems component
-!,importstate=self%importState &  !<-- the nems component import state
-!,exportstate=self%exportState &  !<-- the nems component export state
+ ,importstate=self%importState &  !<-- the nems component import state
+ ,exportstate=self%exportState &  !<-- the nems component export state
  ,clock=self%clock     &  !<-- the main esmf clock
  ,phase=1  &
  ,userrc     =rc_user  &
@@ -429,17 +427,17 @@ subroutine FV3_StateWrite(state, fileName, rc)
   esmf_err_abort(rc)
 #endif
 
-! deallocate(fieldList, itemNameList)
+deallocate(fieldList, itemNameList)
  
   
 end subroutine FV3_StateWrite
-!subroutine state_to_nems( state, self )
+subroutine state_to_nems( state, self )
 
-!implicit none
-!type(fv3jedi_state), intent(in)    :: state
-!type(model_ufs),    intent(inout) :: self
+implicit none
+type(fv3jedi_state), intent(in)    :: state
+type(model_ufs),    intent(inout) :: self
 
-!integer :: rc
+integer :: rc
 
 ! import- and exportState, as well as a clock are stored in self
 ! Do not access them from the model that is under NUOPC ESM, since it may not
@@ -452,7 +450,7 @@ end subroutine FV3_StateWrite
 !Get atmosphere import state
 !call NUOPC_ModelGet(atmComp, modelClock=clock, importState=importState, rc=rc)
 
-!end subroutine state_to_nems
+end subroutine state_to_nems
 
 ! ------------------------------------------------------------------------------
 
@@ -489,4 +487,111 @@ call ESMF_StateGet(fcstState, itemNameList=fcstItemNameList, &
 !call NUOPC_ModelGet(atmComp, rc)
 
 end subroutine nems_to_state
+
+subroutine get_start_date(self,date_start,date_final)
+
+class(model_ufs),    intent(inout) :: self
+type(esmf_time),     intent(inout) :: date_start, date_final
+
+type(ESMF_TimeInterval)            :: runDuration
+integer :: yy,mm,dd,hh,mns,sec,rc
+!-----------------------------------------------------------------------
+!***  Set the start time in the Main Clock.
+!-----------------------------------------------------------------------
+!
+! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+MESSAGE_CHECK="MAIN: Extract Starting Year from Config File"
+!     CALL ESMF_LogWrite(MESSAGE_CHECK,ESMF_LOGMSG_INFO,rc=RC)
+! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+!
+CALL ESMF_ConfigGetAttribute(config=self%cf_main                  &
+                            ,value =YY                            &
+                            ,label ='start_year:'                 &
+                            ,rc    =RC)
+esmf_err_abort(RC)
+! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+!
+! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+MESSAGE_CHECK="MAIN: Extract Starting Month from Config File"
+!     CALL ESMF_LogWrite(MESSAGE_CHECK,ESMF_LOGMSG_INFO,rc=RC)
+! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+!
+CALL ESMF_ConfigGetAttribute(config=self%cf_main                  &
+                            ,value =MM                            &
+                            ,label ='start_month:'                &
+                            ,rc    =RC)
+esmf_err_abort(RC)
+! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+!
+! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+MESSAGE_CHECK="MAIN: Extract Starting Day from Config File"
+!     CALL ESMF_LogWrite(MESSAGE_CHECK,ESMF_LOGMSG_INFO,rc=RC)
+! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+!
+CALL ESMF_ConfigGetAttribute(config=self%cf_main                  &
+                            ,value =DD                            &
+                            ,label ='start_day:'                  &
+                            ,rc    =RC)
+esmf_err_abort(RC)
+! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+!
+! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+MESSAGE_CHECK="MAIN: Extract Starting Hour from Config File"
+!     CALL ESMF_LogWrite(MESSAGE_CHECK,ESMF_LOGMSG_INFO,rc=RC)
+! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+!
+CALL ESMF_ConfigGetAttribute(config=self%cf_main                  &
+                            ,value =HH                            &
+                            ,label ='start_hour:'                 &
+                            ,rc    =RC)
+esmf_err_abort(RC)
+! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+!
+! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+MESSAGE_CHECK="MAIN: Extract Starting Minute from Config File"
+!     CALL ESMF_LogWrite(MESSAGE_CHECK,ESMF_LOGMSG_INFO,rc=RC)
+! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+!
+CALL ESMF_ConfigGetAttribute(config=self%cf_main                  &
+                            ,value =MNS                           &
+                            ,label ='start_minute:'               &
+                            ,rc    =RC)
+esmf_err_abort(RC)
+! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+!
+! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+MESSAGE_CHECK="MAIN: Extract Starting Second from Config File"
+!     CALL ESMF_LogWrite(MESSAGE_CHECK,ESMF_LOGMSG_INFO,rc=RC)
+! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+!
+CALL ESMF_ConfigGetAttribute(config=self%cf_main                  &
+                            ,value =SEC                           &
+                            ,label ='start_second:'               &
+                            ,rc    =RC)
+esmf_err_abort(RC)
+! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+!
+! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+MESSAGE_CHECK="MAIN: Set the Forecast Start Time"
+write(6,*) 'time is ',yy,mm,dd,hh,mns,sec
+! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+!
+CALL ESMF_TimeSet(time=date_start                                 &  !<-- The start time of the forecast (ESMF)
+                 ,yy  =YY                                         &  !<-- Year from config file
+                 ,mm  =MM                                         &  !<-- Month from config file
+                 ,dd  =DD                                         &  !<-- Day from config file
+                 ,h   =HH                                         &  !<-- Hour from config file
+                 ,m   =MNS                                        &  !<-- Minute from config file
+                 ,s   =SEC                                        &  !<-- Second from config file
+                ,rc  =RC)
+esmf_err_abort(RC)
+call ESMF_timeintervalset(runduration, h=4, rc=rc)
+date_final = date_start + runduration
+
+self%clock = ESMF_ClockCreate(name="main_clock", &
+  timeStep=runduration, startTime=date_start, stopTime=date_final, rc=rc)
+esmf_err_abort(rc)
+! ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~ ~
+
+end subroutine
 end module fv3jedi_ufs_mod

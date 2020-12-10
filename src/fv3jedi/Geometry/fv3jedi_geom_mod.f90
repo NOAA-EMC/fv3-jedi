@@ -12,7 +12,7 @@ use mpi
 use string_f_c_mod
 
 ! atlas uses
-use atlas_module, only: atlas_field, atlas_fieldset, atlas_real, atlas_functionspace_pointcloud
+use atlas_module, only: atlas_field, atlas_fieldset, atlas_real, atlas_functionspace
 
 ! fckit uses
 use fckit_mpi_module,           only: fckit_mpi_comm
@@ -79,9 +79,11 @@ type :: fv3jedi_geom
   real(kind=kind_real), allocatable, dimension(:,:)     :: dxa, dya
   logical :: ne_corner, se_corner, sw_corner, nw_corner
   logical :: nested = .false.
+  logical :: bounded_domain = .false.
+
   integer :: grid_type = 0
   logical :: dord4 = .true.
-  type(atlas_functionspace_pointcloud) :: afunctionspace
+  type(atlas_functionspace) :: afunctionspace
   contains
     procedure, public :: create
     procedure, public :: clone
@@ -309,6 +311,8 @@ self%ne_corner = Atm(1)%gridstruct%ne_corner
 self%se_corner = Atm(1)%gridstruct%se_corner
 self%sw_corner = Atm(1)%gridstruct%sw_corner
 self%nw_corner = Atm(1)%gridstruct%nw_corner
+self%nested    = Atm(1)%gridstruct%nested
+self%bounded_domain =  Atm(1)%gridstruct%bounded_domain
 
 !Unstructured lat/lon
 self%ngrid = (self%iec-self%isc+1)*(self%jec-self%jsc+1)
@@ -463,12 +467,15 @@ self%nw_corner = other%nw_corner
 
 self%domain => other%domain
 
-self%afunctionspace = atlas_functionspace_pointcloud(other%afunctionspace%c_ptr())
+self%afunctionspace = atlas_functionspace(other%afunctionspace%c_ptr())
 
 self%fields = fields
 
 self%lat_us = other%lat_us
 self%lon_us = other%lon_us
+
+self%nested = other%nested
+self%bounded_domain = other%bounded_domain
 
 end subroutine clone
 

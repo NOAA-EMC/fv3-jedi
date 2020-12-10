@@ -42,6 +42,7 @@ LINK_FILES( "${fv3jedi_test_fv3files}" ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRE
 list( APPEND fv3jedi_test_input
   testinput/3denvar_geos_aero.yaml
   testinput/3dvar_gfs_bal.yaml
+  testinput/3dvar_lam_cmaq.yaml
   testinput/4denvar.yaml
   testinput/addincrement_geos.yaml
   testinput/addincrement_gfs.yaml
@@ -49,13 +50,18 @@ list( APPEND fv3jedi_test_input
   testinput/bumpparameters_nicas_geos.yaml
   testinput/bumpparameters_nicas_gfs_p12.yaml
   testinput/bumpparameters_nicas_gfs.yaml
+  testinput/bumpparameters_nicas_gfs_aero.yaml 
+  testinput/bumpparameters_nicas_lam_cmaq.yaml
   testinput/convertstate_geos_crtm_surface.yaml
+  testinput/convertstate_geos_model2geovals.yaml
   testinput/convertstate_geos.yaml
   testinput/convertstate_gfs_cold2fv3.yaml
+  testinput/convertstate_gfs_model2geovals.yaml
   testinput/convertstate_gfs.yaml
   testinput/convertstate_gfs_c2ll.yaml
   testinput/diffstates_geos.yaml
   testinput/diffstates_gfs.yaml
+  testinput/diffstates_lam_cmaq.yaml
   testinput/dirac_geos.yaml
   testinput/dirac_gfs_bal.yaml
   testinput/dirac_gfs_c2a.yaml
@@ -93,7 +99,7 @@ list( APPEND fv3jedi_test_input
   testinput/hofx_gfs_aero.yaml
   testinput/hofx_gnssro_ropp.yaml
   testinput/hofx_nomodel.yaml
-  testinput/hofx_nomodel_lam-cmaq.yaml
+  testinput/hofx_nomodel_lam_cmaq.yaml
   testinput/hofx_save_geovals.yaml
   testinput/hyb-3dvar_geos.yaml
   testinput/hyb-3dvar_gfs_0obs.yaml
@@ -119,6 +125,8 @@ list( APPEND fv3jedi_test_input
   testinput/localization_bump.yaml
   testinput/model_fv3lm.yaml
   testinput/model_geos.yaml
+  testinput/model_ufs.yaml
+  testinput/model_gfs.yaml
   testinput/model_pseudo-geos.yaml
   testinput/model_pseudo-gfs.yaml
   testinput/state_geos_aerosol_ext.yaml
@@ -138,21 +146,27 @@ LINK_FILES( "${fv3jedi_test_input}" ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_CURRENT_
 # Test output scripts
 # -------------------
 list( APPEND fv3jedi_testoutput
+  testoutput/3dvar_lam_cmaq.ref
   testoutput/3denvar_geos_aero.ref
   testoutput/4denvar.ref
   testoutput/addincrement_geos.ref
   testoutput/addincrement_gfs.ref
   testoutput/bumpparameters_nicas_geos.ref
   testoutput/bumpparameters_nicas_gfs.ref
+  testoutput/bumpparameters_nicas_gfs_aero.ref 
+  testoutput/bumpparameters_nicas_lam_cmaq.ref
   testoutput/convertstate_geos_crtm_surface.ref
+  testoutput/convertstate_geos_model2geovals.ref
   testoutput/convertstate_geos.ref
   testoutput/convertstate_gfs_cold2fv3.ref
+  testoutput/convertstate_gfs_model2geovals.ref
   testoutput/convertstate_gfs.ref
   testoutput/convertstate_gfs_c2ll.ref
   testoutput/CTestCostData.txt.awsgnu.test
   testoutput/CTestCostData.txt.awsintel.test
   testoutput/diffstates_geos.ref
   testoutput/diffstates_gfs.ref
+  testoutput/diffstates_lam_cmaq.ref
   testoutput/dirac_geos.ref
   testoutput/dirac_gfs_bal.ref
   testoutput/dirac_gfs_c2a.ref
@@ -168,7 +182,7 @@ list( APPEND fv3jedi_testoutput
   testoutput/hofx_fv3lm.ref
   testoutput/hofx_gfs_aero.ref
   testoutput/hofx_gnssro_ropp.ref
-  testoutput/hofx_nomodel_lam-cmaq.ref
+  testoutput/hofx_nomodel_lam_cmaq.ref
   testoutput/hofx_nomodel_gfs.ref
   testoutput/hofx_nomodel.ref
   testoutput/hofx_save_geovals.ref
@@ -247,6 +261,14 @@ EmisCoeff/IR_Land/SEcategory/Little_Endian/USGS.IRland.EmisCoeff.bin
 EmisCoeff/VIS_Land/SEcategory/Little_Endian/USGS.VISland.EmisCoeff.bin
 SpcCoeff/Little_Endian/hirs4_metop-a.SpcCoeff.bin
 TauCoeff/ODPS/Little_Endian/hirs4_metop-a.TauCoeff.bin
+SpcCoeff/Little_Endian/amsua_metop-a.SpcCoeff.bin
+TauCoeff/ODPS/Little_Endian/amsua_metop-a.TauCoeff.bin
+SpcCoeff/Little_Endian/amsua_metop-b.SpcCoeff.bin
+TauCoeff/ODPS/Little_Endian/amsua_metop-b.TauCoeff.bin
+SpcCoeff/Little_Endian/amsua_n15.SpcCoeff.bin
+TauCoeff/ODPS/Little_Endian/amsua_n15.TauCoeff.bin
+SpcCoeff/Little_Endian/amsua_n18.SpcCoeff.bin
+TauCoeff/ODPS/Little_Endian/amsua_n18.TauCoeff.bin
 SpcCoeff/Little_Endian/amsua_n19.SpcCoeff.bin
 TauCoeff/ODPS/Little_Endian/amsua_n19.TauCoeff.bin
 SpcCoeff/Little_Endian/atms_npp.SpcCoeff.bin
@@ -259,6 +281,14 @@ SpcCoeff/Little_Endian/cris-fsr_npp.SpcCoeff.bin
 TauCoeff/ODPS/Little_Endian/cris-fsr_npp.TauCoeff.bin
 SpcCoeff/Little_Endian/iasi_metop-a.SpcCoeff.bin
 TauCoeff/ODPS/Little_Endian/iasi_metop-a.TauCoeff.bin
+SpcCoeff/Little_Endian/iasi_metop-b.SpcCoeff.bin
+TauCoeff/ODPS/Little_Endian/iasi_metop-b.TauCoeff.bin
+SpcCoeff/Little_Endian/mhs_metop-a.SpcCoeff.bin
+TauCoeff/ODPS/Little_Endian/mhs_metop-a.TauCoeff.bin
+SpcCoeff/Little_Endian/mhs_metop-b.SpcCoeff.bin
+TauCoeff/ODPS/Little_Endian/mhs_metop-b.TauCoeff.bin
+SpcCoeff/Little_Endian/mhs_n18.SpcCoeff.bin
+TauCoeff/ODPS/Little_Endian/mhs_n18.TauCoeff.bin
 SpcCoeff/Little_Endian/mhs_n19.SpcCoeff.bin
 TauCoeff/ODPS/Little_Endian/mhs_n19.TauCoeff.bin
 SpcCoeff/Little_Endian/sndrD1_g15.SpcCoeff.bin
@@ -337,7 +367,7 @@ message(STATUS "fv3-jedi is on branch/tag ${GIT_BRANCH_FV3JEDI}")
 # For releases data is obtained for UCAR dash
 set(ECBUILD_DOWNLOAD_BASE_URL_DEFAULT https://jedi-test-files.s3.amazonaws.com)
 
-if(${GIT_BRANCH_FV3JEDI} STREQUAL "1.0.0")
+if(GIT_BRANCH_FV3JEDI STREQUAL "1.0.0")
   set(ECBUILD_DOWNLOAD_BASE_URL https://dashrepo.ucar.edu/dataset/147_miesch/file/)
   set(BRANCHPATH "/")
   set(MD5CHECK 0)
@@ -364,7 +394,7 @@ endif()
 function(fv3jedi_data_download_test REPO DEFAULTBRANCH test_data_file LINKNG_PATH)
 
   # Special case of data structure for UCAR DASH release data
-  if(${GIT_BRANCH_FV3JEDI} STREQUAL "1.0.0")
+  if(GIT_BRANCH_FV3JEDI STREQUAL "1.0.0")
     set(REPOPATH "/")
   else()
     set(REPOPATH ${REPO})
@@ -815,6 +845,12 @@ if( FV3_FORECAST_MODEL MATCHES "FV3CORE" )
                     EXE     fv3jedi_convertstate.x )
 endif()
 
+fv3jedi_add_test( NAME    convertstate_gfs_model2geovals
+                  EXE     fv3jedi_convertstate.x )
+
+fv3jedi_add_test( NAME    convertstate_geos_model2geovals
+                  EXE     fv3jedi_convertstate.x )
+
 # Remaining interface tests
 # -------------------------
 fv3jedi_add_test( NAME    variablechange_gfs
@@ -907,7 +943,7 @@ fv3jedi_add_test( NAME    hofx_gfs_aero
                   EXE     fv3jedi_hofx_nomodel.x
                   TOL     1e-3 0)
 
-fv3jedi_add_test( NAME    hofx_nomodel_lam-cmaq
+fv3jedi_add_test( NAME    hofx_nomodel_lam_cmaq
                   EXE     fv3jedi_hofx_nomodel.x
                   TOL     1e-3 0)
 
@@ -923,6 +959,12 @@ fv3jedi_add_test( NAME    bumpparameters_nicas_geos
                   EXE     fv3jedi_parameters.x)
 
 fv3jedi_add_test( NAME    bumpparameters_nicas_gfs
+                  EXE     fv3jedi_parameters.x)
+
+fv3jedi_add_test( NAME    bumpparameters_nicas_gfs_aero
+                  EXE     fv3jedi_parameters.x)
+
+fv3jedi_add_test( NAME    bumpparameters_nicas_lam_cmaq
                   EXE     fv3jedi_parameters.x)
 
 if (NOT SKIP_LARGE_TESTS)
@@ -990,17 +1032,24 @@ endif()
 #                  EXE          fv3jedi_var.x
 #                  TEST_DEPENDS bumpparameters_nicas_gfs)
 
-fv3jedi_add_test( NAME         hyb-3dvar_gfs_aero
-                  EXE          fv3jedi_var.x
-                  TOL          1.0e-1 0
-                  TEST_DEPENDS bumpparameters_nicas_gfs )
-
 if( ${ROPP-UFO_FOUND} )
   fv3jedi_add_test( NAME         hyb-3dvar_gfs_gnssro_ropp
                     EXE          fv3jedi_var.x
                     TOL          1.0e-1 0
                     TEST_DEPENDS bumpparameters_nicas_gfs )
 endif()
+
+# Chemistry / AQ Variational Tests
+# -----------
+fv3jedi_add_test( NAME         3dvar_lam_cmaq
+                  EXE          fv3jedi_var.x
+                  TOL          1.0e-1 0
+                  TEST_DEPENDS bumpparameters_nicas_lam_cmaq )
+
+fv3jedi_add_test( NAME         hyb-3dvar_gfs_aero
+                  EXE          fv3jedi_var.x
+                  TOL          1.0e-1 0
+                  TEST_DEPENDS bumpparameters_nicas_gfs )
 
 if( ${GEOS-AERO_FOUND} )
   fv3jedi_add_test( NAME         3denvar_geos_aero
@@ -1045,6 +1094,11 @@ fv3jedi_add_test( NAME         diffstates_geos
                   EXE          fv3jedi_diffstates.x
                   TOL          1.0e-4 0
                   TEST_DEPENDS hyb-4dvar_pseudo-geos )
+
+fv3jedi_add_test( NAME         diffstates_lam_cmaq
+                  EXE          fv3jedi_diffstates.x
+                  TOL          1.0e-3 0
+                  TEST_DEPENDS 3dvar_lam_cmaq )
 
 # Add increment
 # -------------

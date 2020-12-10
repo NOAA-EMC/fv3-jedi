@@ -170,6 +170,15 @@ list( APPEND fv3jedi_ufs_src_files
   Model/ufs/ModelUFS.cc
   Model/ufs/ModelUFS.h
   Model/ufs/ModelUFS.interface.h
+  # gfs
+  Model/gfs/fv3jedi_cldprop_type_mod.f90
+  Model/gfs/fv3jedi_gfs_interface_mod.F90
+  Model/gfs/fv3jedi_gfs_mod.f90
+  Model/gfs/fv3jedi_sfcprop_type_mod.f90
+  Model/gfs/fv3jedi_tbdprop_type_mod.f90
+  Model/gfs/ModelGFS.cc
+  Model/gfs/ModelGFS.h
+  Model/gfs/ModelGFS.interface.h
 )
 
 #Requirement libraries
@@ -209,10 +218,10 @@ ecbuild_add_library( TARGET          fv3jedi
                      LINKER_LANGUAGE ${FV3JEDI_LINKER_LANGUAGE}
                    )
 
-if( FV3_FORECAST_MODEL MATCHES "UFS" ) 
+if( FV3_FORECAST_MODEL MATCHES "UFS" )
   # ESMF
   find_package(ESMF MODULE REQUIRED STATIC)
-  
+
   # Link all the libraries
   target_link_libraries( fv3jedi PUBLIC nemsio::nemsio)
   target_link_libraries( fv3jedi PUBLIC w3emc::w3emc_d)

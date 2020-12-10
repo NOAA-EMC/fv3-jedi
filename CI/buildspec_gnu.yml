@@ -12,6 +12,8 @@ phases:
       - echo $CODEBUILD_RESOLVED_SOURCE_VERSION
       - echo $CODEBUILD_SOURCE_REPO_URL
       - echo $CODEBUILD_SOURCE_VERSION
+      - org_name=$(echo $CODEBUILD_SOURCE_REPO_URL | awk '{split($0,org,"/"); print org[4]}')
+      - echo $org_name
 
       - echo $CODEBUILD_WEBHOOK_MERGE_COMMIT
       - echo $CODEBUILD_WEBHOOK_PREV_COMMIT
@@ -85,40 +87,40 @@ phases:
         fi
 
       # jedi-cmake
-      - ./clone.sh $GIT_USER $GIT_PASS jcsda/jedi-cmake $CODEBUILD_GIT_BRANCH jedicmake /jcsda/fv3-bundle develop
+      - ./clone.sh $GIT_USER $GIT_PASS jcsda-internal/jedi-cmake $CODEBUILD_GIT_BRANCH jedicmake /jcsda/fv3-bundle develop
 
       # FV3-JEDI (testing repo)
-      - ./clone.sh $GIT_USER $GIT_PASS jcsda/fv3-jedi $CODEBUILD_GIT_BRANCH fv3-jedi /jcsda/fv3-bundle develop
+      - ./clone.sh $GIT_USER $GIT_PASS jcsda-internal/fv3-jedi $CODEBUILD_GIT_BRANCH fv3-jedi /jcsda/fv3-bundle develop
 
       # fv3-jedi-lm
-      - ./clone.sh $GIT_USER $GIT_PASS jcsda/fv3-jedi-linearmodel $CODEBUILD_GIT_BRANCH fv3-jedi-lm /jcsda/fv3-bundle develop
+      - ./clone.sh $GIT_USER $GIT_PASS jcsda-internal/fv3-jedi-linearmodel $CODEBUILD_GIT_BRANCH fv3-jedi-lm /jcsda/fv3-bundle develop
 
       # crtm
-      - ./clone.sh $GIT_USER $GIT_PASS jcsda/crtm $CODEBUILD_GIT_BRANCH_CRTM crtm /jcsda/fv3-bundle $CRTM_JEDI_BRANCH
+      - ./clone.sh $GIT_USER $GIT_PASS jcsda-internal/crtm $CODEBUILD_GIT_BRANCH_CRTM crtm /jcsda/fv3-bundle $CRTM_JEDI_BRANCH
 
       # ioda
-      - ./clone.sh $GIT_USER $GIT_PASS jcsda/ioda $CODEBUILD_GIT_BRANCH ioda /jcsda/fv3-bundle develop
+      - ./clone.sh $GIT_USER $GIT_PASS jcsda-internal/ioda $CODEBUILD_GIT_BRANCH ioda /jcsda/fv3-bundle develop
 
       # disable git-lfs
       - git lfs install --skip-smudge
 
       # saber
-      - ./clone.sh $GIT_USER $GIT_PASS jcsda/saber $CODEBUILD_GIT_BRANCH saber /jcsda/fv3-bundle develop
+      - ./clone.sh $GIT_USER $GIT_PASS jcsda-internal/saber $CODEBUILD_GIT_BRANCH saber /jcsda/fv3-bundle develop
 
       # oops
-      - ./clone.sh $GIT_USER $GIT_PASS jcsda/oops $CODEBUILD_GIT_BRANCH oops /jcsda/fv3-bundle develop
+      - ./clone.sh $GIT_USER $GIT_PASS jcsda-internal/oops $CODEBUILD_GIT_BRANCH oops /jcsda/fv3-bundle develop
 
       # ufo
-      - ./clone.sh $GIT_USER $GIT_PASS jcsda/ufo $CODEBUILD_GIT_BRANCH ufo /jcsda/fv3-bundle develop
+      - ./clone.sh $GIT_USER $GIT_PASS jcsda-internal/ufo $CODEBUILD_GIT_BRANCH ufo /jcsda/fv3-bundle develop
 
       # femps
-      - ./clone.sh $GIT_USER $GIT_PASS jcsda/femps $CODEBUILD_GIT_BRANCH femps /jcsda/fv3-bundle develop
+      - ./clone.sh $GIT_USER $GIT_PASS jcsda-internal/femps $CODEBUILD_GIT_BRANCH femps /jcsda/fv3-bundle develop
 
       # fms
-      - ./clone.sh $GIT_USER $GIT_PASS jcsda/FMS $CODEBUILD_GIT_BRANCH fms /jcsda/fv3-bundle release-stable-ecbuild
+      - ./clone.sh $GIT_USER $GIT_PASS jcsda-internal/FMS $CODEBUILD_GIT_BRANCH fms /jcsda/fv3-bundle release-stable-ecbuild
 
       # GFDL_atmos_cubed_sphere
-      - ./clone.sh $GIT_USER $GIT_PASS jcsda/GFDL_atmos_cubed_sphere $CODEBUILD_GIT_BRANCH fv3 /jcsda/fv3-bundle release-stable
+      - ./clone.sh $GIT_USER $GIT_PASS jcsda-internal/GFDL_atmos_cubed_sphere $CODEBUILD_GIT_BRANCH fv3 /jcsda/fv3-bundle release-stable
 
       #  internal repos
       # fckit
@@ -203,7 +205,8 @@ phases:
       - cd /build_container/fv3-jedi
       - pwd
       - ls
-      - bash /jcsda/fv3-bundle/fv3-jedi/CI/codecov_script.sh
+      - bash /jcsda/fv3-bundle/fv3-jedi/CI/codecov_script_$org_name.sh
+
 artifacts:
   files:
     - /build_container/fv3-jedi/Testing/Temporary/CTestCostData.txt

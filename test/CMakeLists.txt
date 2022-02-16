@@ -103,8 +103,6 @@ list( APPEND fv3jedi_testinput
   testinput/geometry_gfs.yaml
   testinput/geometry_iterator_geos_2d.yaml
   testinput/geometry_iterator_geos_3d.yaml
-  testinput/geometry_iterator_gfs_2d.yaml
-  testinput/geometry_iterator_gfs_3d.yaml
   testinput/geometry_iterator_lam_cmaq.yaml
   testinput/geometry_lam_cmaq.yaml
   testinput/geometry_nested.yaml
@@ -580,39 +578,84 @@ create_symlink_filename( ${CRTM_FV3JEDI_TESTFILES_PATH}
 # Executables
 ecbuild_add_executable( TARGET  test_fv3jedi_errorcovariance.x
                         SOURCES mains/TestErrorCovariance.cc
-                        LIBS    fv3jedi )
+                        LIBS    fv3jedi 
+                                cmeps
+                                cice
+                                mom6
+                                piof
+                                pioc )
 
 ecbuild_add_executable( TARGET  test_fv3jedi_geometry.x
                         SOURCES mains/TestGeometry.cc
-                        LIBS    fv3jedi )
+                        LIBS    fv3jedi  
+                                cmeps
+                                cice
+                                mom6
+                                piof
+                                pioc)
 
 ecbuild_add_executable( TARGET  test_fv3jedi_getvalues.x
                         SOURCES mains/TestGetValues.cc
-                        LIBS    fv3jedi )
+                        LIBS    fv3jedi  
+                                cmeps
+                                cice
+                                mom6
+                                piof
+                                pioc)
 
 ecbuild_add_executable( TARGET  test_fv3jedi_geometryiterator.x
                         SOURCES mains/TestGeometryIterator.cc
-                        LIBS    fv3jedi )
+                        LIBS    fv3jedi  
+                                cmeps
+                                cice
+                                mom6
+                                piof
+                                pioc)
 
 ecbuild_add_executable( TARGET  test_fv3jedi_increment.x
                         SOURCES mains/TestIncrement.cc
-                        LIBS    fv3jedi )
+                        LIBS    fv3jedi  
+                                cmeps
+                                cice
+                                mom6
+                                piof
+                                pioc)
 
 ecbuild_add_executable( TARGET  test_fv3jedi_lineargetvalues.x
                         SOURCES mains/TestLinearGetValues.cc
-                        LIBS    fv3jedi )
+                        LIBS    fv3jedi  
+                                cmeps
+                                cice
+                                mom6
+                                piof
+                                pioc)
 
 ecbuild_add_executable( TARGET  test_fv3jedi_linearmodel.x
                         SOURCES mains/TestLinearModel.cc
-                        LIBS    fv3jedi )
+                        LIBS    fv3jedi  
+                                cmeps
+                                cice
+                                mom6
+                                piof
+                                pioc)
 
 ecbuild_add_executable( TARGET  test_fv3jedi_linearvariablechange.x
                         SOURCES mains/TestLinVarCha.cc
-                        LIBS    fv3jedi )
+                        LIBS    fv3jedi  
+                                cmeps
+                                cice
+                                mom6
+                                piof
+                                pioc)
 
 ecbuild_add_executable( TARGET  test_fv3jedi_localization.x
                         SOURCES mains/TestLocalization.cc
-                        LIBS    fv3jedi )
+                        LIBS    fv3jedi  
+                                cmeps
+                                cice
+                                mom6
+                                piof
+                                pioc)
 
 #ecbuild_add_executable( TARGET  test_fv3jedi_modelauxcontrol.x
 #                        SOURCES mains/TestModelAuxControl.cc
@@ -620,27 +663,52 @@ ecbuild_add_executable( TARGET  test_fv3jedi_localization.x
 #
 #ecbuild_add_executable( TARGET  test_fv3jedi_modelauxcovariance.x
 #                        SOURCES mains/TestModelAuxCovariance.cc
-#                        LIBS    fv3jedi )
+#                        LIBS    fv3jedi  )
 
 ecbuild_add_executable( TARGET  test_fv3jedi_model.x
                         SOURCES mains/TestModel.cc
-                        LIBS    fv3jedi )
+                        LIBS    fv3jedi  
+                                cmeps
+                                cice
+                                mom6
+                                piof
+                                pioc)
 
 ecbuild_add_executable( TARGET  test_fv3jedi_obslocalization.x
                         SOURCES mains/TestObsLocalization.cc
-                        LIBS    fv3jedi )
+                        LIBS    fv3jedi  
+                                cmeps
+                                cice
+                                mom6
+                                piof
+                                pioc)
 
 ecbuild_add_executable( TARGET  test_fv3jedi_obslocalizations.x
                         SOURCES mains/TestObsLocalizations.cc
-                        LIBS    fv3jedi )
+                        LIBS    fv3jedi  
+                                cmeps
+                                cice
+                                mom6
+                                piof
+                                pioc)
 
 ecbuild_add_executable( TARGET  test_fv3jedi_state.x
                         SOURCES mains/TestState.cc
-                        LIBS    fv3jedi )
+                        LIBS    fv3jedi  
+                                cmeps
+                                cice
+                                mom6
+                                piof
+                                pioc)
 
 ecbuild_add_executable( TARGET  test_fv3jedi_variablechange.x
                         SOURCES mains/TestVarCha.cc
-                        LIBS    fv3jedi )
+                        LIBS    fv3jedi  
+                                cmeps
+                                cice
+                                mom6
+                                piof
+                                pioc)
 
 #Make some output directories for test data
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/Data/bump)
@@ -700,9 +768,6 @@ if(FV3_FORECAST_MODEL MATCHES "GEOS" OR FV3_FORECAST_MODEL MATCHES "UFS")
     execute_process( COMMAND cp ${FV3_FORECAST_MODEL_RUNDIR}/cap_restart ${CMAKE_CURRENT_BINARY_DIR}/Data/ModelRunDirs/${FV3_FORECAST_MODEL}/cap_restart )
     execute_process( COMMAND chmod 755 ${CMAKE_CURRENT_BINARY_DIR}/Data/ModelRunDirs/${FV3_FORECAST_MODEL}/cap_restart )
   endif()
-  if (FV3_FORECAST_MODEL MATCHES "UFS")
-    file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/Data/ModelRunDirs/${FV3_FORECAST_MODEL}/RESTART)
-  endif()
 endif()
 
 ecbuild_add_resources( TARGET   fv3jedi_test_scripts
@@ -745,24 +810,14 @@ ecbuild_add_test( TARGET   fv3jedi_test_tier1_geometry_nested
                   ARGS     testinput/geometry_nested.yaml
                   COMMAND  test_fv3jedi_geometry.x )
 
-ecbuild_add_test( TARGET   fv3jedi_test_tier1_geometry_iterator_gfs_2d
+ecbuild_add_test( TARGET   fv3jedi_test_tier1_geometry_iterator_gfs
                   MPI      6
-                  ARGS     testinput/geometry_iterator_gfs_2d.yaml
+                  ARGS     testinput/geometry_iterator_gfs.yaml
                   COMMAND  test_fv3jedi_geometryiterator.x )
 
-ecbuild_add_test( TARGET   fv3jedi_test_tier1_geometry_iterator_gfs_3d
+ecbuild_add_test( TARGET   fv3jedi_test_tier1_geometry_iterator_geos
                   MPI      6
-                  ARGS     testinput/geometry_iterator_gfs_3d.yaml
-                  COMMAND  test_fv3jedi_geometryiterator.x )
-
-ecbuild_add_test( TARGET   fv3jedi_test_tier1_geometry_iterator_geos_2d
-                  MPI      6
-                  ARGS     testinput/geometry_iterator_geos_2d.yaml
-                  COMMAND  test_fv3jedi_geometryiterator.x )
-
-ecbuild_add_test( TARGET   fv3jedi_test_tier1_geometry_iterator_geos_3d
-                  MPI      6
-                  ARGS     testinput/geometry_iterator_geos_3d.yaml
+                  ARGS     testinput/geometry_iterator_geos.yaml
                   COMMAND  test_fv3jedi_geometryiterator.x )
 
 ecbuild_add_test( TARGET   fv3jedi_test_tier1_geometry_iterator_lam_cmaq
@@ -1308,6 +1363,24 @@ ecbuild_add_test( TARGET   fv3jedi_test_tier1_eda_block_3dvar
                   ARGS     testinput/eda_block_3dvar.yaml
                   COMMAND  fv3jedi_eda.x
                   TEST_DEPENDS fv3jedi_test_tier1_bumpparameters_nicas_gfs )
+
+# Test of time taken
+# ------------------
+if ( DEFINED TEST_TIME_REF_FV3 )
+  execute_process( COMMAND ${CMAKE_COMMAND} -E create_symlink
+          ${CMAKE_CURRENT_SOURCE_DIR}/testoutput/${TEST_TIME_REF_FV3}
+          ${CMAKE_CURRENT_BINARY_DIR}/testoutput/${TEST_TIME_REF_FV3} )
+
+  ecbuild_add_test( TARGET fv3jedi_test_tier1_run_times
+                    TYPE SCRIPT
+                    COMMAND ${CMAKE_BINARY_DIR}/bin/run_time_test.py
+                    ARGS testoutput/${TEST_TIME_REF_FV3}
+                    ${CMAKE_BINARY_DIR}/fv3-jedi/Testing/Temporary/CTestCostData.txt
+                    testinput/test_time.yaml)
+else()
+  message ( STATUS "TEST_TIME not built")
+endif()
+
 
 # Tier 2 tests
 # ------------

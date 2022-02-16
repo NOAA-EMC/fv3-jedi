@@ -101,8 +101,8 @@ list( APPEND fv3jedi_testinput
   testinput/geometry_geos.yaml
   testinput/geometry_gfs127.yaml
   testinput/geometry_gfs.yaml
-  testinput/geometry_iterator_geos.yaml
-  testinput/geometry_iterator_gfs.yaml
+  testinput/geometry_iterator_geos_2d.yaml
+  testinput/geometry_iterator_geos_3d.yaml
   testinput/geometry_iterator_lam_cmaq.yaml
   testinput/geometry_lam_cmaq.yaml
   testinput/geometry_nested.yaml
@@ -174,7 +174,6 @@ list( APPEND fv3jedi_testinput
   testinput/staticb_var_gfs.yaml
   testinput/staticb_var_aero.yaml
   testinput/staticb_vbal_gfs.yaml
-  testinput/test_time.yaml
   testinput/variablechange_geos.yaml
   testinput/variablechange_gfs.yaml
 )
@@ -204,8 +203,6 @@ list( APPEND fv3jedi_testoutput
   testoutput/convertstate_gfs_model2geovals.ref
   testoutput/convertstate_gfs.ref
   testoutput/convertstate_gfs_c2ll.ref
-  testoutput/CTestCostData.txt.awsgnu.test
-  testoutput/CTestCostData.txt.awsintel.test
   testoutput/diffstates_geos.ref
   testoutput/diffstates_gfs.ref
   testoutput/diffstates_lam_cmaq.ref

@@ -15,7 +15,7 @@ variable change tests:
   - variable change:
       variable change name: Analysis2Model
       # Possible to read variable with this variable change
-      filetype: gfs
+      filetype: fms restart
       datapath: Data/inputs/gfs_c12/bkg/
       filename_core: 20180415.000000.fv_core.res.nc
       filename_trcr: 20180415.000000.fv_tracer.res.nc
@@ -25,7 +25,8 @@ variable change tests:
       input variables: [ua,va,t,ps]
       output variables: [u,v,ua,va,delp,t,sphum,vtype,u_srf,v_srf]
     state:
-      filetype: gfs
+      datetime: 2018-04-15T00:00:00Z
+      filetype: fms restart
       datapath: Data/inputs/gfs_c12/bkg/
       filename_core: 20180415.000000.fv_core.res.nc
       filename_trcr: 20180415.000000.fv_tracer.res.nc
@@ -45,7 +46,8 @@ variable change tests:
       input variables: [psi,chi,t,tv,delp,ps,q,rh,qi,ql,o3]
       output variables: [ua,va,T,DELP,sphum,ice_wat,liq_wat,o3mr]
     state:
-      filetype: gfs
+      datetime: 2018-04-15T00:00:00Z
+      filetype: fms restart
       datapath: Data/inputs/gfs_c12/bkg/
       filename_core: 20180415.000000.fv_core.res.nc
       filename_trcr: 20180415.000000.fv_tracer.res.nc

@@ -9,7 +9,8 @@ geometry:
   fieldsets:
     - fieldset: Data/fieldsets/dynamics.yaml
 initial condition:
-  filetype: gfs
+  datetime: 2018-04-15T00:00:00Z
+  filetype: fms restart
   state variables: &state_vars [ua,va,t,delp,ps,sphum,ice_wat,liq_wat,o3mr]
   datapath: Data/inputs/gfs_c12/bkg
   filename_core: 20180415.000000.fv_core.res.nc
@@ -37,7 +38,9 @@ background error:
         variables: [surface_pressure]
       input:
       - parameter: nicas_norm
-        filetype: gfs
+        set datetime on read: true
+        datetime: 2018-04-15T00:00:00Z
+        filetype: fms restart
         datapath: Data/staticb/
         psinfile: true
         filename_core: 20180415.000000.nicas_norm.fv_core.res.nc
@@ -47,7 +50,9 @@ background error:
         filename_cplr: 20180415.000000.nicas_norm.coupler.res
         date: 2018-04-15T00:00:00Z
       universe radius:
-        filetype: gfs
+        datetime: 2018-04-15T00:00:00Z
+        set datetime on read: true
+        filetype: fms restart
         psinfile: true
         datapath: Data/staticb/
         filename_core: 20180415.000000.cor_rh.fv_core.res.nc
@@ -61,7 +66,9 @@ background error:
     output variables: *control_vars
     active variables: *active_vars
     file:
-      filetype: gfs
+      datetime: 2018-04-15T00:00:00Z
+      set datetime on read: true
+      filetype: fms restart
       psinfile: true
       datapath: Data/staticb/
       filename_core: 20180415.000000.stddev.fv_core.res.nc
@@ -98,7 +105,7 @@ background error:
     input variables: *state_vars_with_rh
     output variables: *state_vars
 output dirac:
-  filetype: gfs
+  filetype: fms restart
   datapath: Data/staticb/
   filename_core: dirac_global_%id%_gfs_6pe.fv_core.res.nc
   filename_trcr: dirac_global_%id%_gfs_6pe.fv_tracer.res.nc

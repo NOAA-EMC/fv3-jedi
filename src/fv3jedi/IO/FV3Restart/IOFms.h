@@ -16,14 +16,14 @@
 #include "oops/util/parameters/Parameters.h"
 
 #include "fv3jedi/IO/Utils/IOBase.h"
-#include "IOGfs.interface.h"
+#include "IOFms.interface.h"
 
 namespace fv3jedi {
 
 // -------------------------------------------------------------------------------------------------
 
-class IOGfsParameters : public IOParametersBase {
-  OOPS_CONCRETE_PARAMETERS(IOGfsParameters, IOParametersBase)
+class IOFmsParameters : public IOParametersBase {
+  OOPS_CONCRETE_PARAMETERS(IOFmsParameters, IOParametersBase)
 
  public:
   // Data path for files being read
@@ -76,24 +76,27 @@ class IOGfsParameters : public IOParametersBase {
   // Things BUMP puts in write config not needed in IO but specified to avoid failures
   oops::OptionalParameter<std::string> bumpparameter{"parameter", "bump parameter", this};
   oops::OptionalParameter<util::DateTime> bumpdatetime{"date", "bump datetime", this};
+
+  // Let user set the calendar type
+  oops::Parameter<int> calendar_type{"calendar type", "calendar type", 2, this};
 };
 
 // -------------------------------------------------------------------------------------------------
-class IOGfs : public IOBase, private util::ObjectCounter<IOGfs> {
+class IOFms : public IOBase, private util::ObjectCounter<IOFms> {
  public:
-  static const std::string classname() {return "fv3jedi::IOGfs";}
+  static const std::string classname() {return "fv3jedi::IOFms";}
 
-  typedef IOGfsParameters Parameters_;
+  typedef IOFmsParameters Parameters_;
 
-  IOGfs(const Geometry &, const Parameters_ &);
-  ~IOGfs();
+  IOFms(const Geometry &, const Parameters_ &);
+  ~IOFms();
   void read(State &) const override;
   void read(Increment &) const override;
   void write(const State &) const override;
   void write(const Increment &) const override;
 
  private:
-  F90iogfs objectKeyForFortran_;
+  F90iofms objectKeyForFortran_;
   void print(std::ostream &) const override;
 };
 

@@ -37,7 +37,8 @@ variable change:
                      cld_amt,ud,vd,phis]
 states:
 - input:
-    filetype: gfs
+    datetime: 2020-01-01T00:00:00Z
+    filetype: fms restart
     state variables: *input
     datapath: Data/convertstate/
     filename_cold: 20200101.000000.coldstartwinds.gfs_data.nc
@@ -45,7 +46,7 @@ states:
     filename_orog: 20200101.000000.coldstartwinds.oro_data.nc
     skip coupler file: true
   output:
-    filetype: gfs
+    filetype: fms restart
     datapath: Data/convertstate/
     prefix: 20200101.000000.cold2fv3
 

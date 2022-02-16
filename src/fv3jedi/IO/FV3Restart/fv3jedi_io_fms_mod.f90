@@ -3,7 +3,7 @@
 ! This software is licensed under the terms of the Apache Licence Version 2.0
 ! which can be obtained at http://www.apache.org/licenses/LICENSE-2.0.
 
-module fv3jedi_io_gfs_mod
+module fv3jedi_io_fms_mod
 
 ! oops
 use datetime_mod
@@ -29,12 +29,12 @@ use fv3jedi_kinds_mod,            only: kind_real
 
 implicit none
 private
-public fv3jedi_io_gfs, read_fields
+public fv3jedi_io_fms, read_fields
 
 ! If adding a new file it is added here and object and config in setup
 integer, parameter :: numfiles = 9
 
-type fv3jedi_io_gfs
+type fv3jedi_io_fms
  logical :: input_is_date_templated
  character(len=128) :: datapath
  character(len=128) :: filenames(numfiles)
@@ -53,6 +53,7 @@ type fv3jedi_io_gfs
  logical :: prepend_date
  logical :: has_prefix
  character(len=128) :: prefix
+ integer :: calendar_type
  ! Geometry copies
  type(domain2D), pointer :: domain
  integer :: npz
@@ -62,7 +63,7 @@ type fv3jedi_io_gfs
    procedure :: read
    procedure :: write
    final     :: dummy_final
-end type fv3jedi_io_gfs
+end type fv3jedi_io_fms
 
 ! --------------------------------------------------------------------------------------------------
 
@@ -72,7 +73,7 @@ contains
 
 subroutine create(self, conf, domain, npz)
 
-class(fv3jedi_io_gfs),     intent(inout) :: self
+class(fv3jedi_io_fms),     intent(inout) :: self
 type(fckit_configuration), intent(in)    :: conf
 type(domain2D), target,    intent(in)    :: domain
 integer,                   intent(in)    :: npz
@@ -85,7 +86,7 @@ character(len=13) :: fileconf(numfiles)
 ! -----------------
 call conf%get_or_die("datapath",str)
 if (len(str) > 128) &
-  call abor1_ftn('fv3jedi_io_gfs_mod.setup: datapath too long, max FMS char length= 128')
+  call abor1_ftn('fv3jedi_io_fms_mod.setup: datapath too long, max FMS char length= 128')
 
 ! For ensemble methods switch out member template
 ! -----------------------------------------------
@@ -127,7 +128,7 @@ do n = 1, numfiles
   ! Retrieve user input filenames if available
   if (conf%has(fileconf(n))) then
     call conf%get_or_die(fileconf(n),str)
-    if (len(str) > 128) call abor1_ftn("fv3jedi_io_gfs_mod.setup: "//fileconf(n)//&
+    if (len(str) > 128) call abor1_ftn("fv3jedi_io_fms_mod.setup: "//fileconf(n)//&
                                         " too long, max FMS char length= 128")
     call add_iteration(conf,str)
     self%filenames_conf(n) = str
@@ -175,6 +176,13 @@ if (self%has_prefix) then
   self%prefix = trim(str)
 endif
 
+! Calendar type
+! -------------
+self%calendar_type = 2
+if (conf%has("calendar type")) then
+  call conf%get_or_die("calendar type", self%calendar_type)
+endif
+
 ! Geometry copies
 ! ---------------
 self%domain => domain
@@ -186,7 +194,7 @@ end subroutine create
 
 subroutine delete(self)
 
-class(fv3jedi_io_gfs), intent(inout) :: self
+class(fv3jedi_io_fms), intent(inout) :: self
 
 if (associated(self%domain)) nullify(self%domain)
 
@@ -194,12 +202,10 @@ end subroutine delete
 
 ! --------------------------------------------------------------------------------------------------
 
-subroutine read(self, vdate, calendar_type, date_init, fields)
+subroutine read(self, vdate, fields)
 
-class(fv3jedi_io_gfs), intent(inout) :: self
+class(fv3jedi_io_fms), intent(inout) :: self
 type(datetime),        intent(inout) :: vdate
-integer,               intent(inout) :: calendar_type
-integer,               intent(inout) :: date_init(6)
 type(fv3jedi_field),   intent(inout) :: fields(:)
 integer :: n
 
@@ -217,7 +223,7 @@ endif
 
 ! Read meta data
 ! --------------
-call read_meta(self, vdate, calendar_type, date_init)
+if (.not. self%skip_coupler) call read_meta(self, vdate)
 
 ! Read fields
 ! -----------
@@ -227,12 +233,10 @@ end subroutine read
 
 ! --------------------------------------------------------------------------------------------------
 
-subroutine write(self, vdate, calendar_type, date_init, fields)
+subroutine write(self, vdate, fields)
 
-class(fv3jedi_io_gfs), intent(inout) :: self
+class(fv3jedi_io_fms), intent(inout) :: self
 type(datetime),        intent(in)    :: vdate
-integer,               intent(in)    :: calendar_type
-integer,               intent(in)    :: date_init(6)
 type(fv3jedi_field),   intent(in)    :: fields(:)
 
 ! Overwrite any datetime templates in the file names
@@ -241,7 +245,7 @@ call setup_date(self, vdate)
 
 ! Write metadata and fields
 ! -------------------------
-call write_all(self, fields, vdate, calendar_type, date_init)
+call write_all(self, fields, vdate)
 
 end subroutine write
 
@@ -249,7 +253,7 @@ end subroutine write
 
 subroutine setup_date(self, vdate)
 
-type(fv3jedi_io_gfs), intent(inout) :: self
+type(fv3jedi_io_fms), intent(inout) :: self
 type(datetime),       intent(in)    :: vdate
 
 integer :: n
@@ -285,36 +289,45 @@ end subroutine setup_date
 
 ! --------------------------------------------------------------------------------------------------
 
-subroutine read_meta(self, vdate, calendar_type, date_init)
+subroutine read_meta(self, vdate)
 
-type(fv3jedi_io_gfs), intent(inout) :: self
+type(fv3jedi_io_fms), intent(inout) :: self
 type(datetime),       intent(inout) :: vdate         !< DateTime
-integer,              intent(inout) :: calendar_type !< GFS calendar type
-integer,              intent(inout) :: date_init(6)  !< GFS date intialized
 
 integer :: date(6)
-integer :: idate, isecs
+integer :: idate, itime
+character(len=8) :: cdate
+character(len=6) :: ctime
 
-integer :: idrst
-real(kind=kind_real), allocatable, dimension(:,:) :: grid_lat, grid_lon
+integer :: calendar_type
+integer :: date_init(6)
+character(len=64) :: vdate_string_file, vdate_string
 
-! Get dates from coupler.res
-!---------------------------
-if (.not. self%skip_coupler) then
-  open(101, file=trim(adjustl(self%datapath))//'/'//self%filenames(self%index_cplr), form='formatted')
-  read(101, '(i6)')  calendar_type
-  read(101, '(6i6)') date_init
-  read(101, '(6i6)') date
-  close(101)
-  idate=date(1)*10000+date(2)*100+date(3)
-  isecs=date(4)*3600+date(5)*60+date(6)
-else
-  idate = 20000101
-  isecs = 0
-endif
+! Get datetime from coupler.res
+open(101, file=trim(adjustl(self%datapath))//'/'//self%filenames(self%index_cplr), form='formatted')
+read(101, '(i6)')  calendar_type
+read(101, '(6i6)') date_init
+read(101, '(6i6)') date
+close(101)
 
-! Set datetime
-call datetime_from_ifs(vdate, idate, isecs)
+! Pad and convert to string
+idate=date(1)*10000+date(2)*100+date(3)
+itime=date(4)*10000+date(5)*100+date(6)
+write(cdate,"(I0.8)") idate  ! Looks like YYYYMMDD
+write(ctime,"(I0.6)") itime  ! Looks like HHmmSS
+
+! Compute string form of the datetime in the fields
+call datetime_to_string(vdate, vdate_string)
+
+! Convert to string that matches format returned by datetime_to_string YYYY-MM-DDTHH:mm:SS
+vdate_string_file = cdate(1:4)//'-'//cdate(5:6)//'-'//cdate(7:8)//'T'// &
+                    ctime(1:2)//':'//ctime(3:4)//':'//ctime(5:6)//'Z'
+
+! Assert
+if (trim(vdate_string_file) .ne. trim(vdate_string)) &
+  call abor1_ftn("io_cube_sphere_history.read.check_datetime: Datetime set in config (" &
+                 //trim(vdate_string)//") does not match that read from the file (" &
+                 //trim(vdate_string_file)//").")
 
 end subroutine read_meta
 
@@ -323,7 +336,7 @@ end subroutine read_meta
 subroutine read_fields(self, fields)
 
 implicit none
-type(fv3jedi_io_gfs), intent(inout) :: self
+type(fv3jedi_io_fms), intent(inout) :: self
 type(fv3jedi_field),  intent(inout) :: fields(:)
 
 type(restart_file_type) :: restart(numfiles)
@@ -378,9 +391,9 @@ do var = 1,size(fields)
     case("cold")
       indexrst = self%index_cold
     case("default")
-      call abor1_ftn("fv3jedi_io_gfs_mod: Abort, field "//trim(fields(var)%short_name)//&
+      call abor1_ftn("fv3jedi_io_fms_mod: Abort, field "//trim(fields(var)%short_name)//&
                       " does not have IOFile specified in the FieldSets metadata or it"&
-                      " does not match options in gfs IO module")
+                      " does not match options in fms IO module")
   end select
 
   ! Convert fv3jedi position to fms position
@@ -435,14 +448,12 @@ end subroutine read_fields
 
 ! --------------------------------------------------------------------------------------------------
 
-subroutine write_all(self, fields, vdate, calendar_type, date_init)
+subroutine write_all(self, fields, vdate)
 
 implicit none
-type(fv3jedi_io_gfs), intent(inout) :: self
+type(fv3jedi_io_fms), intent(inout) :: self
 type(fv3jedi_field),  intent(in)    :: fields(:)     !< Fields to be written
 type(datetime),       intent(in)    :: vdate         !< DateTime
-integer,              intent(in)    :: calendar_type !< GFS calendar type
-integer,              intent(in)    :: date_init(6)  !< GFS date intialized
 
 logical :: rstflag(numfiles)
 integer :: n, indexrst, position, var, idrst, date(6)
@@ -505,7 +516,7 @@ do var = 1,size(fields)
     case("cold")
       indexrst = self%index_cold
     case("default")
-      call abor1_ftn("fv3jedi_io_gfs_mod: Abort, field "//trim(fields(var)%short_name)//&
+      call abor1_ftn("fv3jedi_io_fms_mod: Abort, field "//trim(fields(var)%short_name)//&
                       " does not have IOFile specified in the FieldSets metadata")
   end select
 
@@ -544,10 +555,10 @@ enddo
 if (mpp_pe() == mpp_root_pe() .and. .not. self%skip_coupler) then
    open(101, file = trim(adjustl(self%datapath))//'/'// &
         trim(adjustl(self%filenames(self%index_cplr))), form='formatted')
-   write( 101, '(i6,8x,a)' ) calendar_type, &
+   write( 101, '(i6,8x,a)' ) self%calendar_type, &
         '(Calendar: no_calendar=0, thirty_day_months=1, julian=2, gregorian=3, noleap=4)'
-   write( 101, '(6i6,8x,a)') date_init, 'Model start time:   year, month, day, hour, minute, second'
-   write( 101, '(6i6,8x,a)') date,      'Current model time: year, month, day, hour, minute, second'
+   write( 101, '(6i6,8x,a)') date, 'Model start time:   year, month, day, hour, minute, second'
+   write( 101, '(6i6,8x,a)') date, 'Current model time: year, month, day, hour, minute, second'
    close(101)
 endif
 
@@ -561,9 +572,9 @@ end subroutine write_all
 
 ! Not really needed but prevents gnu compiler bug
 subroutine dummy_final(self)
-type(fv3jedi_io_gfs), intent(inout) :: self
+type(fv3jedi_io_fms), intent(inout) :: self
 end subroutine dummy_final
 
 ! --------------------------------------------------------------------------------------------------
 
-end module fv3jedi_io_gfs_mod
+end module fv3jedi_io_fms_mod

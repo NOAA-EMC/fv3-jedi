@@ -32,27 +32,28 @@ use fv_arrays_mod,              only: fv_atmos_type, deallocate_fv_atmos_type
 
 ! fv3jedi uses
 use fields_metadata_mod,         only: fields_metadata, field_metadata
-use fv3jedi_constants_mod,       only: ps, rad2deg, kappa
+use fv3jedi_constants_mod,       only: ps, rad2deg, kap1, kapr
 use fv3jedi_kinds_mod,           only: kind_real
 use fv3jedi_netcdf_utils_mod,    only: nccheck
 use fv_init_mod,                 only: fv_init
 use fv3jedi_fmsnamelist_mod,     only: fv3jedi_fmsnamelist
-use fv3jedi_io_gfs_mod,          only: fv3jedi_io_gfs, read_fields
+use fv3jedi_io_fms_mod,          only: fv3jedi_io_fms, read_fields
 use fv3jedi_field_mod,           only: fv3jedi_field
 
 implicit none
 private
-public :: fv3jedi_geom, getVerticalCoordLogP, initialize
+public :: fv3jedi_geom, getVerticalCoord, getVerticalCoordLogP, initialize, pedges2pmidlayer
 
 ! --------------------------------------------------------------------------------------------------
 
 !> Fortran derived type to hold geometry data for the FV3JEDI model
 type :: fv3jedi_geom
   integer :: isd, ied, jsd, jed                                                     !data domain
-  integer :: isc, iec, jsc, jec                                                     !compute domain
+  integer :: isc, iec, jsc, jec, kec                                                !compute domain
   integer :: npx,npy,npz,ngrid                                                      !x/y/z-dir grid edge points per tile
   integer :: layout(2), io_layout(2)                                                !Processor layouts
   integer :: ntile, ntiles                                                          !Tile number and total
+  integer :: iterator_dimension                                                     !iterator dimension
   real(kind=kind_real) :: ptop                                                      !Pressure at top of domain
   type(domain2D) :: domain_fix                                                      !MPP domain
   type(domain2D), pointer :: domain                                                 !MPP domain
@@ -72,6 +73,9 @@ type :: fv3jedi_geom
   real(kind=kind_real), allocatable, dimension(:,:)     :: a11, a12, a21, a22
   type(fckit_mpi_comm) :: f_comm
   type(fields_metadata) :: fields
+  ! Vertical Coordinate
+  real(kind=kind_real), allocatable, dimension(:)       :: vCoord                   !Model vertical coordinate
+  real(kind=kind_real), allocatable, dimension(:,:)     :: surface_pressure         !Grid surface pressure
   ! For D to (A to) C grid
   real(kind=kind_real), allocatable, dimension(:,:)     :: rarea
   real(kind=kind_real), allocatable, dimension(:,:,:)   :: sin_sg
@@ -159,6 +163,7 @@ integer, dimension(nf90_max_var_dims) :: dimids, dimlens
 character(len=:), allocatable :: str
 logical :: do_write_geom = .false.
 logical :: logp = .false.
+integer :: iterator_dimension = 2
 
 type(fv3jedi_fmsnamelist) :: fmsnamelist
 
@@ -171,6 +176,9 @@ self%f_comm = comm
 call conf%get_or_die("interpolation method",str)
 self%interp_method = str
 deallocate(str)
+
+call conf%get_or_die("iterator dimension", iterator_dimension)
+self%iterator_dimension = iterator_dimension
 
 ! Update the fms namelist with this Geometry
 ! ------------------------------------------
@@ -186,10 +194,12 @@ self%isd = Atm(1)%bd%isd
 self%ied = Atm(1)%bd%ied
 self%jsd = Atm(1)%bd%jsd
 self%jed = Atm(1)%bd%jed
+
 self%isc = Atm(1)%bd%isc
 self%iec = Atm(1)%bd%iec
 self%jsc = Atm(1)%bd%jsc
 self%jec = Atm(1)%bd%jec
+self%kec = Atm(1)%npz
 
 self%ntile  = gtile
 self%ntiles = Atm(1)%flagstruct%ntiles
@@ -338,6 +348,11 @@ self%nw_corner = Atm(1)%gridstruct%nw_corner
 self%nested    = Atm(1)%gridstruct%nested
 self%bounded_domain =  Atm(1)%gridstruct%bounded_domain
 
+allocate(self%vCoord(self%npz))
+allocate(self%surface_pressure(self%isd:self%ied, self%jsd:self%jed))
+
+self%surface_pressure = real(Atm(1)%ps ,kind_real)
+
 call conf%get_or_die("logp",logp)
 self%logp = logp
 
@@ -453,6 +468,8 @@ self%jec             = other%jec
 self%jed             = other%jed
 self%ntile           = other%ntile
 self%ntiles          = other%ntiles
+self%iterator_dimension = other%iterator_dimension
+
 self%ptop            = other%ptop
 self%ak              = other%ak
 self%bk              = other%bk
@@ -611,8 +628,7 @@ integer :: jl
 real(kind=kind_real) :: sigmaup, sigmadn
 real(kind=kind_real), pointer :: real_ptr_1(:), real_ptr_2(:,:)
 type(atlas_field) :: afield
-real(kind=kind_real) :: plevli(self%npz+1)
-real(kind=kind_real) :: kapr, kap1
+real(kind=kind_real) :: plevli(self%npz+1),logp(self%npz)
 
 ! Add area
 afield = self%afunctionspace%create_field(name='area', kind=atlas_real(kind_real), levels=0)
@@ -632,13 +648,9 @@ if (.not. self%logp) then
       real_ptr_2(jl,:) = 0.5*(sigmaup+sigmadn) ! 'fake' sigma coordinates
    enddo
 else
-   kapr = 1.0/kappa
-   kap1 = kappa + 1.0
-   do jl=1,self%npz+1
-      plevli(jl) = self%ak(jl) + self%bk(jl)*ps
-   enddo
+   call getVerticalCoordLogP(self,logp,self%npz,ps)
    do jl=1,self%npz
-      real_ptr_2(jl,:) = -log(((plevli(jl)**kap1-plevli(jl+1)**kap1)/(kap1*(plevli(jl)-plevli(jl+1))))**kapr)
+      real_ptr_2(jl,:) = logp(jl)
    enddo
 endif
 
@@ -896,8 +908,51 @@ subroutine write_geom(self)
 
 end subroutine write_geom
 
-!--------------------------------------------------------------------------------------------------
+!----------------------------------------------------------------------------
+! 1d pressure_edge to pressure_mid
+!----------------------------------------------------------------------------
 
+subroutine pedges2pmidlayer(npz,ptype,pe1d,p1d)
+ integer,              intent(in)  :: npz       !number of model layers
+ character(len=*),     intent(in)  :: ptype     !midlayer pressure definition: 'average' or 'Philips'
+ real(kind=kind_real), intent(in)  :: pe1d(npz+1) !pressure edge
+ real(kind=kind_real), intent(out) :: p1d(npz)    !pressure mid
+
+ select case (ptype)
+   case('Philips')
+     p1d = ((pe1d(2:npz+1)**kap1 - pe1d(1:npz)**kap1)/&
+            (kap1*(pe1d(2:npz+1) - pe1d(1:npz))))**kapr
+   case default
+     p1d = 0.5*(pe1d(2:npz+1) + pe1d(1:npz))
+ end select
+
+end subroutine pedges2pmidlayer
+
+!--------------------------------------------------------------------------------------------------
+subroutine getVerticalCoord(self, vc, npz, psurf)
+  ! returns log(pressure) at mid level of the vertical column with surface
+  ! prsssure of psurf
+  ! coded using an example from Jeff Whitaker used in GSI ENKF pacakge
+
+  type(fv3jedi_geom),   intent(in) :: self
+  integer,              intent(in) :: npz
+  real(kind=kind_real), intent(in) :: psurf
+  real(kind=kind_real), intent(out) :: vc(npz)
+
+  real(kind=kind_real) :: plevli(npz+1), p(npz)
+  integer :: k
+
+  ! compute interface pressure
+  do k=1,npz+1
+    plevli(k) = self%ak(k) + self%bk(k)*psurf
+  enddo
+
+  ! compute presure at mid level and convert it to logp
+  call pedges2pmidlayer(npz,'Philips',plevli,vc)
+
+end subroutine getVerticalCoord
+
+!--------------------------------------------------------------------------------------------------
 subroutine getVerticalCoordLogP(self, vc, npz, psurf)
   ! returns log(pressure) at mid level of the vertical column with surface prsssure of psurf
   ! coded using an example from Jeff Whitaker used in GSI ENKF pacakge
@@ -907,29 +962,10 @@ subroutine getVerticalCoordLogP(self, vc, npz, psurf)
   real(kind=kind_real), intent(in) :: psurf
   real(kind=kind_real), intent(out) :: vc(npz)
 
-  real :: plevli(npz+1), plevlm
-  real :: rd, cp, kap, kapr, kap1
-  integer :: k
+  real(kind=kind_real) :: p(npz)
 
-  ! constants
-  rd = 2.8705e+2
-  cp = 1.0046e+3
-  kap = rd/cp
-  kapr = cp/rd
-  kap1 = kap + 1.0
-
-  ! compute interface pressure
-  do k=1,self%npz+1
-    plevli(k) = self%ak(k) + self%bk(k)*psurf
-  enddo
-
-  ! compute presure at mid level and convert it to logp
-  do k=1,self%npz
-    ! phillips vertical interpolation from guess_grids.F90 in GSI
-    ! (used for global model)
-    plevlm = ((plevli(k)**kap1-plevli(k+1)**kap1)/(kap1*(plevli(k)-plevli(k+1))))**kapr
-    vc(k) = - log(plevlm)
-  enddo
+  call getVerticalCoord(self, p, npz, psurf)
+  vc = - log(p)
 
 end subroutine getVerticalCoordLogP
 ! --------------------------------------------------------------------------------------------------

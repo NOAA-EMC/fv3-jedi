@@ -31,7 +31,8 @@ variable change:
                     ice_wat_cold,rainwat_cold,snowwat_cold,graupel_cold,ud_cold,vd_cold,orog_filt]
 states:
 - input:
-    filetype: gfs
+    datetime: 2020-01-01T00:00:00Z
+    filetype: fms restart
     state variables: *input
     datapath: Data/inputs/gfs_c12/
     filename_cold: cold/20200101.000000.gfs_data.nc
@@ -39,7 +40,7 @@ states:
     filename_orog: oro/C12_oro_data.nc
     skip coupler file: true
   output:
-    filetype: gfs
+    filetype: fms restart
     datapath: Data/convertstate/
     prefix: 20200101.000000.coldstartwinds
 

@@ -11,7 +11,8 @@ geometry:
     - fieldset: Data/fieldsets/lam_cmaq.yaml
     - fieldset: Data/fieldsets/ufo.yaml
 state:
-  filetype: gfs
+  datetime: 2020-09-03T18:00:00Z
+  filetype: fms restart
   datapath: Data/inputs/lam_cmaq/bkg/
   filename_core: 20200903.180000.fv_core.res.tile1.nc
   filename_trcr: 20200903.180000.fv_tracer.res.tile1.nc

@@ -11,7 +11,7 @@ geometry:
 model:
   name: PSEUDO
   tstep: PT1H
-  filetype: gfs
+  filetype: fms restart
   filename is datetime templated: true
   datapath: Data/inputs/gfs_c12/bkg/
   filename_core: %yyyy%mm%dd.%hh%MM%ss.fv_core.res.nc
@@ -29,7 +29,8 @@ model test:
   final norm: 3909.4255800046863
   tolerance: 1.0e-4
 initial condition:
-  filetype: gfs
+  datetime: 2018-04-14T21:00:00Z
+  filetype: fms restart
   datapath: Data/inputs/gfs_c12/bkg/
   filename_core: 20180414.210000.fv_core.res.nc
   filename_trcr: 20180414.210000.fv_tracer.res.nc

@@ -11,7 +11,8 @@ geometry:
     - fieldset: Data/fieldsets/dynamics.yaml
 input variables: &inputVars [psi,chi,t,ps,rh,liq_wat,o3mr]
 background:
-  filetype: gfs
+  datetime: 2018-04-15T00:00:00Z
+  filetype: fms restart
   state variables: *inputVars
   psinfile: true
   datapath: Data/staticb/unbalanced/mem001
@@ -45,7 +46,8 @@ bump:
     variables: [surface_pressure]
   input:
   - parameter: var
-    filetype: gfs
+    datetime: 2018-04-14T21:00:00Z
+    filetype: fms restart
     datapath: Data/staticb/
     psinfile: true
     filename_core: 20180414.210000.var.fv_core.res.nc
@@ -55,7 +57,8 @@ bump:
     filename_cplr: 20180414.210000.var.coupler.res
     date: 2018-04-14T21:00:00Z
   - parameter: m4
-    filetype: gfs
+    datetime: 2018-04-14T21:00:00Z
+    filetype: fms restart
     datapath: Data/staticb/
     psinfile: true
     filename_core: 20180414.210000.m4.fv_core.res.nc
@@ -65,7 +68,8 @@ bump:
     filename_cplr: 20180414.210000.m4.coupler.res
     date: 2018-04-14T21:00:00Z
   - parameter: var
-    filetype: gfs
+    datetime: 2018-04-15T00:00:00Z
+    filetype: fms restart
     datapath: Data/staticb/
     psinfile: true
     filename_core: 20180415.000000.var.fv_core.res.nc
@@ -75,7 +79,8 @@ bump:
     filename_cplr: 20180415.000000.var.coupler.res
     date: 2018-04-15T00:00:00Z
   - parameter: m4
-    filetype: gfs
+    datetime: 2018-04-15T00:00:00Z
+    filetype: fms restart
     datapath: Data/staticb/
     psinfile: true
     filename_core: 20180415.000000.m4.fv_core.res.nc
@@ -85,7 +90,8 @@ bump:
     filename_cplr: 20180415.000000.m4.coupler.res
     date: 2018-04-15T00:00:00Z
   - parameter: var
-    filetype: gfs
+    datetime: 2018-04-15T03:00:00Z
+    filetype: fms restart
     datapath: Data/staticb/
     psinfile: true
     filename_core: 20180415.030000.var.fv_core.res.nc
@@ -95,7 +101,8 @@ bump:
     filename_cplr: 20180415.030000.var.coupler.res
     date: 2018-04-15T03:00:00Z
   - parameter: m4
-    filetype: gfs
+    datetime: 2018-04-15T03:00:00Z
+    filetype: fms restart
     datapath: Data/staticb/
     psinfile: true
     filename_core: 20180415.030000.m4.fv_core.res.nc
@@ -106,7 +113,7 @@ bump:
     date: 2018-04-15T03:00:00Z
   output:
   - parameter: stddev
-    filetype: gfs
+    filetype: fms restart
     datapath: Data/staticb/
     filename_core: stddev.fv_core.res.nc
     filename_trcr: stddev.fv_tracer.res.nc

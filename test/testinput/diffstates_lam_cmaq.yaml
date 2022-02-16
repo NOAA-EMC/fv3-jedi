@@ -16,7 +16,8 @@ increment geometry:
   - fieldset: Data/fieldsets/lam_cmaq.yaml
   - fieldset: Data/fieldsets/ufo.yaml
 state1: #Analysis
-  filetype: gfs
+  datetime: 2020-09-03T18:00:00Z
+  filetype: fms restart
   datapath: Data/analysis
   filename_core: 20200903.180000.3dvar_lam_cmaq_no2.fv_core.res.nc
   filename_trcr: 20200903.180000.3dvar_lam_cmaq_no2.fv_tracer.res.nc
@@ -25,7 +26,8 @@ state1: #Analysis
   filename_cplr: 20200903.180000.3dvar_lam_cmaq_no2.coupler.res
   state variables: [no2]
 state2: #background
-  filetype: gfs
+  datetime: 2020-09-03T18:00:00Z
+  filetype: fms restart
   datapath: Data/inputs/lam_cmaq/bkg/
   filename_core: 20200903.180000.fv_core.res.tile1.nc
   filename_trcr: 20200903.180000.fv_tracer.res.tile1.nc
@@ -34,7 +36,7 @@ state2: #background
   filename_cplr: 20200903.180000.coupler.res
   state variables: [no2]
 output:
-  filetype: gfs
+  filetype: fms restart
   datapath: Data/increment/
   prefix: 3dvar_lam_cmaq_no2
 

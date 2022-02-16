@@ -4,7 +4,8 @@ cost function:
   window length: PT6H
   analysis variables: &3dvars [ua,va,T,DELP,sphum,ice_wat,liq_wat,o3mr]
   background:
-    filetype: gfs
+    datetime: 2018-04-15T00:00:00Z
+    filetype: fms restart
     datapath: Data/inputs/gfs_c12/mem002/
     filename_core: 20180415.000000.fv_core.res.nc
     filename_trcr: 20180415.000000.fv_tracer.res.nc
@@ -34,31 +35,20 @@ cost function:
         value: 0.1
     - covariance:
         covariance model: ensemble
-        members:
-        - filetype: gfs
-          state variables: *3dvars
-          datapath: Data/inputs/gfs_c12/mem001/
-          filename_core: 20180415.000000.fv_core.res.nc
-          filename_trcr: 20180415.000000.fv_tracer.res.nc
-          filename_sfcd: 20180415.000000.sfc_data.nc
-          filename_sfcw: 20180415.000000.fv_srf_wnd.res.nc
-          filename_cplr: 20180415.000000.coupler.res
-        - filetype: gfs
-          state variables: *3dvars
-          datapath: Data/inputs/gfs_c12/mem002/
-          filename_core: 20180415.000000.fv_core.res.nc
-          filename_trcr: 20180415.000000.fv_tracer.res.nc
-          filename_sfcd: 20180415.000000.sfc_data.nc
-          filename_sfcw: 20180415.000000.fv_srf_wnd.res.nc
-          filename_cplr: 20180415.000000.coupler.res
-        - filetype: gfs
-          state variables: *3dvars
-          datapath: Data/inputs/gfs_c12/mem003/
-          filename_core: 20180415.000000.fv_core.res.nc
-          filename_trcr: 20180415.000000.fv_tracer.res.nc
-          filename_sfcd: 20180415.000000.sfc_data.nc
-          filename_sfcw: 20180415.000000.fv_srf_wnd.res.nc
-          filename_cplr: 20180415.000000.coupler.res
+        members from template:
+          template:
+            datetime: 2018-04-15T00:00:00Z
+            filetype: fms restart
+            state variables: *3dvars
+            datapath: Data/inputs/gfs_c12/mem%mem%/
+            filename_core: 20180415.000000.fv_core.res.nc
+            filename_trcr: 20180415.000000.fv_tracer.res.nc
+            filename_sfcd: 20180415.000000.sfc_data.nc
+            filename_sfcw: 20180415.000000.fv_srf_wnd.res.nc
+            filename_cplr: 20180415.000000.coupler.res
+          pattern: %mem%
+          nmembers: 3
+          zero padding: 3
         localization:
           localization method: SABER
           saber block:
@@ -98,7 +88,7 @@ cost function:
       - name: northward_wind
       - name: air_temperature
       threshold: 6.0
-  filetype: gfs
+  filetype: fms restart
   datapath: Data/inputs/gfs_c12/bkg/
   filename_core: 20180415.000000.fv_core.res.nc
   filename_trcr: 20180415.000000.fv_tracer.res.nc
@@ -117,7 +107,7 @@ cost function:
     - fieldset: Data/fieldsets/dynamics.yaml
     - fieldset: Data/fieldsets/ufo.yaml
 output:
-  filetype: gfs
+  filetype: fms restart
   datapath: Data/analysis/eda/gfs/mem002
   prefix: eda-3dvar-block-gfs
   frequency: PT1H
@@ -131,7 +121,7 @@ variational:
     online diagnostics:
       write basis: false
       krylov basis:
-        filetype: gfs
+        filetype: fms restart
         datapath: Data/analysis/eda/gfs/mem002/
         filename_core: krylov.fv_core.res.nc
         filename_trcr: krylov.fv_tracer.res.nc

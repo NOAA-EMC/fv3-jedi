@@ -12,7 +12,8 @@ geometry:
     - fieldset: Data/fieldsets/aerosols_gfs.yaml
 input variables: &inputVars [sulf,bc1,bc2,oc1,oc2,dust1,dust2,dust3,dust4,dust5,seas1,seas2,seas3,seas4]
 background:
-  filetype: gfs
+  datetime: 2018-04-15T00:00:00Z
+  filetype: fms restart
   state variables: *inputVars
   datapath: Data/inputs/gfs_aero_c12/mem001
   filename_core: 20180415.000000.fv_core.res.nc
@@ -30,7 +31,9 @@ bump:
   write_nicas_c0: false
   resol: 6.0
   universe radius:
-    filetype: gfs
+    datetime: 2018-04-15T00:00:00Z
+    set datetime on read: true
+    filetype: fms restart
     datapath: Data/staticb_aero/
     filename_core: 20180415.000000.cor_rh.fv_core.res.nc
     filename_trcr: 20180415.000000.cor_rh.fv_tracer.res.nc
@@ -40,7 +43,9 @@ bump:
     date: 2018-04-15T00:00:00Z
   input:
   - parameter: cor_rh
-    filetype: gfs
+    set datetime on read: true
+    datetime: 2018-04-15T00:00:00Z
+    filetype: fms restart
     datapath: Data/staticb_aero/
     filename_core: 20180415.000000.cor_rh.fv_core.res.nc
     filename_trcr: 20180415.000000.cor_rh.fv_tracer.res.nc
@@ -49,7 +54,9 @@ bump:
     filename_cplr: 20180415.000000.cor_rh.coupler.res
     date: 2018-04-15T00:00:00Z
   - parameter: cor_rv
-    filetype: gfs
+    set datetime on read: true
+    datetime: 2018-04-15T00:00:00Z
+    filetype: fms restart
     datapath: Data/staticb_aero/
     filename_core: 20180415.000000.cor_rv.fv_core.res.nc
     filename_trcr: 20180415.000000.cor_rv.fv_tracer.res.nc
@@ -59,7 +66,7 @@ bump:
     date: 2018-04-15T00:00:00Z
   output:
   - parameter: nicas_norm
-    filetype: gfs
+    filetype: fms restart
     datapath: Data/staticb_aero/
     filename_core: nicas_norm.fv_core.res.nc
     filename_trcr: nicas_norm.fv_tracer.res.nc

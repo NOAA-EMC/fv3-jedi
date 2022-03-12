@@ -581,6 +581,7 @@ ecbuild_add_executable( TARGET  test_fv3jedi_errorcovariance.x
                         LIBS    fv3jedi 
                                 cmeps
                                 cice
+                                gsw
                                 mom6
                                 piof
                                 pioc )

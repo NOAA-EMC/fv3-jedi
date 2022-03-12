@@ -11,7 +11,7 @@
 
 #include "oops/util/DateTime.h"
 #include "oops/util/Logger.h"
-
+#include "oops/util/abor1_cpp.h"
 #include "ModelUFS.interface.h"
 
 #include "fv3jedi/Geometry/Geometry.h"
@@ -74,7 +74,7 @@ void ModelUFS::finalize(State & xx) const {
 }
 // -------------------------------------------------------------------------------------------------
 int ModelUFS::saveTrajectory(State & xx, const ModelBias &) const {
-  ABORT("Model:UFS should not be used for the trajectory");
+//  ABORT("Model:UFS should not be used for the trajectory");
   return 0;
 }
 // -------------------------------------------------------------------------------------------------

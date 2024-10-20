@@ -122,7 +122,13 @@ if (NOT FV3_FORECAST_MODEL MATCHES GEOS AND NOT FV3_FORECAST_MODEL MATCHES UFS)
 endif()
 
 # fms
-set(HAS_FMS2_IO TRUE) # Set to FALSE if FMS2 IO unavailable (should be removed eventually)
+option(BUILD_FMS2_IO "Build fv3-jedi with FMS2_IO" ON)
+set(HAS_FMS2_IO TRUE)
+if (NOT BUILD_FMS2_IO)
+   set(HAS_FMS2_IO FALSE)
+endif()
+message("FV3-JEDI built with HAS_FMS2_IO set to ${HAS_FMS2_IO}")
+
 find_package(FMS 2023.04 REQUIRED COMPONENTS R4 R8)
 if (FV3_PRECISION MATCHES DOUBLE OR NOT FV3_PRECISION)
   add_library(fms ALIAS FMS::fms_r8)

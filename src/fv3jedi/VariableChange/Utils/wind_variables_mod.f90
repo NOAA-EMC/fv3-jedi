@@ -2824,6 +2824,7 @@ real(kind=kind_real), intent(in) :: ua(4)
 real(kind=kind_real), intent(in) :: dxa(4)
 real(kind=kind_real):: t1, t2
 
+edge_interpolate4 = 0.0_kind_real
 t1 = dxa(1) + dxa(2)
 t2 = dxa(3) + dxa(4)
 

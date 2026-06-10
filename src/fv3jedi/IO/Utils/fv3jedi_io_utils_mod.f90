@@ -196,6 +196,7 @@ type(fckit_configuration),   intent(in) :: field_io_names
 character(field_clen)                   :: io_name
 
 ! Get the io name for the field
+io_name = ''
 io_name = ioname_long_name(trim(field%long_name), field_io_names)
 
 end function ioname_field
@@ -214,6 +215,7 @@ character(len=:), allocatable :: str
 
 ! If the config has an alias, return the alias; otherwise, return the long name
 ! -----------------------------------------------------------------------------
+io_name = ''
 if (field_io_names%has(trim(long_name))) then
   call field_io_names%get_or_die(trim(long_name), str)
   io_name = str
@@ -259,6 +261,7 @@ type(fckit_configuration),   intent(in) :: field_io_scaling
 real(kind=kind_real)                    :: io_unscale
 
 ! Get the io scaling for the field
+io_unscale = 1.0_kind_real
 io_unscale = iounscale_long_name(trim(field%long_name), field_io_scaling)
 
 end function iounscale_field
@@ -277,11 +280,10 @@ real(kind=kind_real) :: scaling_factor
 
 ! If the config has a scaling factor, return the scaling factor; otherwise, return 1.0
 ! ------------------------------------------------------------------------------------
+io_unscale = 1.0_kind_real
 if (field_io_scaling%has(trim(long_name))) then
   call field_io_scaling%get_or_die(trim(long_name), scaling_factor)
   io_unscale = 1.0_kind_real / scaling_factor
-else
-  io_unscale = 1.0_kind_real
 endif
 
 end function iounscale_long_name

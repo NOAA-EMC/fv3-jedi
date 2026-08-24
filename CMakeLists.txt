@@ -133,7 +133,11 @@ if (FV3_FORECAST_MODEL MATCHES "GEOS")
 endif()
 
 # Linear model
-find_package( fv3jedilm 1.5.0 REQUIRED )
+if(BUILD_FV3JEDI_LM)
+  find_package( fv3jedilm 1.5.0 REQUIRED )
+else()
+  message(STATUS "FV3-JEDI-LM disabled: FV3LM and tangent-linear model support are unavailable")
+endif()
 
 ################################################################################
 # Export package info

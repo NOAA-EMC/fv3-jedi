@@ -62,12 +62,10 @@ ecbuild_add_executable( TARGET  fv3jedi_EnsGETKF.x
                         LIBS    ${FV3JEDI_LIBRARIES}
                        )
 
-if(BUILD_FV3JEDI_LM)
-  ecbuild_add_executable( TARGET  fv3jedi_gen_hybrid_linear_model_coeffs.x
-                          SOURCES fv3jediGenHybridLinearModelCoeffs.cc
-                          LIBS    ${FV3JEDI_LIBRARIES}
-                         )
-endif()
+ecbuild_add_executable( TARGET  fv3jedi_gen_hybrid_linear_model_coeffs.x
+                        SOURCES fv3jediGenHybridLinearModelCoeffs.cc
+                        LIBS    ${FV3JEDI_LIBRARIES}
+                       )
 
 ecbuild_add_executable( TARGET  fv3jedi_hofx.x
                         SOURCES fv3jediHofX.cc
@@ -96,12 +94,10 @@ ecbuild_add_executable( TARGET  fv3jedi_var.x
                                 saber
                       )
 
-if(BUILD_FV3JEDI_LM)
-  ecbuild_add_executable( TARGET  fv3jedi_adjointforecast.x
-                          SOURCES fv3jediAdjointForecast.cc
-                          LIBS    ${FV3JEDI_LIBRARIES}
-                         )
-endif()
+ecbuild_add_executable( TARGET  fv3jedi_adjointforecast.x
+                        SOURCES fv3jediAdjointForecast.cc
+                        LIBS    ${FV3JEDI_LIBRARIES}
+                      )
 
 ecbuild_add_executable( TARGET  fv3jedi_genenspertB.x
                         SOURCES fv3jediGenEnsPertB.cc
@@ -109,12 +105,10 @@ ecbuild_add_executable( TARGET  fv3jedi_genenspertB.x
                                 saber
                       )
 
-if(BUILD_FV3JEDI_LM)
-  ecbuild_add_executable( TARGET  fv3jedi_linearization_error.x
-                          SOURCES fv3jediLinearizationError.cc
-                          LIBS    ${FV3JEDI_LIBRARIES}
-                         )
-endif()
+ecbuild_add_executable( TARGET  fv3jedi_linearization_error.x
+                        SOURCES fv3jediLinearizationError.cc
+                        LIBS    ${FV3JEDI_LIBRARIES}
+                      )
 
 ecbuild_add_executable( TARGET  fv3jedi_processperts.x
                         SOURCES fv3jediProcessPerts.cc

@@ -67,6 +67,11 @@ list( APPEND fv3jedi_src_files
   Model/ModelBase.h
   Model/ModelWrapper.cc
   Model/ModelWrapper.h
+  Model/fv3lm/fv3jedi_fv3lm_interface_mod.F90
+  Model/fv3lm/fv3jedi_fv3lm_mod.f90
+  Model/fv3lm/ModelFV3LM.cc
+  Model/fv3lm/ModelFV3LM.h
+  Model/fv3lm/ModelFV3LM.interface.h
   Model/pseudo/ModelPseudo.cc
   Model/pseudo/ModelPseudo.h
   ModelBias/ModelBiasCovariance.h
@@ -123,27 +128,15 @@ list( APPEND fv3jedi_src_files
   VariableChange/Utils/surface_variables_mod.f90
   VariableChange/Utils/temperature_variables_mod.f90
   VariableChange/Utils/wind_variables_mod.f90
+  Tlm/fv3jedi_tlm_mod.f90
+  Tlm/fv3jedi_traj_mod.f90
+  Tlm/Tlm.cc
   Tlm/Tlm.h
+  Tlm/Tlm.interface.F90
+  Tlm/Tlm.interface.h
+  Tlm/Traj.interface.F90
+  Tlm/Traj.interface.h
 )
-
-if(BUILD_FV3JEDI_LM)
-  list(APPEND fv3jedi_src_files
-    Model/fv3lm/fv3jedi_fv3lm_interface_mod.F90
-    Model/fv3lm/fv3jedi_fv3lm_mod.f90
-    Model/fv3lm/ModelFV3LM.cc
-    Model/fv3lm/ModelFV3LM.h
-    Model/fv3lm/ModelFV3LM.interface.h
-    Tlm/fv3jedi_tlm_mod.f90
-    Tlm/fv3jedi_traj_mod.f90
-    Tlm/Tlm.cc
-    Tlm/Tlm.interface.F90
-    Tlm/Tlm.interface.h
-    Tlm/Traj.interface.F90
-    Tlm/Traj.interface.h
-  )
-else()
-  list(APPEND fv3jedi_src_files Tlm/TlmDisabled.cc)
-endif()
 
 # Ported cubed sphere grid gen files
 list( APPEND fv3jedi_fv3_src_files
@@ -204,11 +197,7 @@ set_source_files_properties(
 # -------------------------------------------
 
 #Requirement libraries
-set(FV3JEDI_LIB_DEP oops saber ufo vader atlas atlas_f)
-if(BUILD_FV3JEDI_LM)
-  list(APPEND FV3JEDI_LIB_DEP fv3jedilm)
-endif()
-list(APPEND FV3JEDI_LIB_DEP fms ${LAPACK_LIBRARIES} ${NETCDF_LIBRARIES})
+set(FV3JEDI_LIB_DEP oops saber ufo vader atlas atlas_f fv3jedilm fms ${LAPACK_LIBRARIES} ${NETCDF_LIBRARIES})
 
 # Fortran OpenMP library
 if(OPENMP)
@@ -258,10 +247,6 @@ ecbuild_add_library( TARGET          fv3jedi
                    )
 
 target_include_directories( fv3jedi PUBLIC "$<BUILD_INTERFACE:${FV3JEDI_INCLUDE_DIRS}>" "$<BUILD_INTERFACE:${FV3JEDI_EXTRA_INCLUDE_DIRS}>" )
-
-if(BUILD_FV3JEDI_LM)
-  target_compile_definitions( fv3jedi PUBLIC FV3JEDI_HAS_LM )
-endif()
 
 
 # Compiler definitions for full UFS model

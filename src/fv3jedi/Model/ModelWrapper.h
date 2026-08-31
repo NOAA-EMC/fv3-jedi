@@ -28,13 +28,7 @@ namespace fv3jedi {
 
 class ModelWrapper : public util::Printable {
  public:
-  static std::vector<std::string> names() {
-#ifdef FV3JEDI_HAS_LM
-    return {"FV3LM", "GEOS", "PSEUDO", "UFS"};
-#else
-    return {"GEOS", "PSEUDO", "UFS"};
-#endif
-  }
+  static std::vector<std::string> names() {return {"FV3LM", "GEOS", "PSEUDO", "UFS"};}
 
   ModelWrapper(const Geometry &, const eckit::Configuration &);
   ~ModelWrapper() = default;

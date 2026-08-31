@@ -26,11 +26,8 @@ namespace eckit {
 }
 
 namespace fv3jedi {
-  class Geometry;
-  class Increment;
   class ModelBias;
   class ModelBiasIncrement;
-  class State;
 
 // -------------------------------------------------------------------------------------------------
 
